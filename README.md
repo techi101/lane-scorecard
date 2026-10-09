@@ -8,7 +8,7 @@ A working, local-first hostel waste-feedback app: record two-bin checks, compare
 
 Start with the [complete project guide](docs/PROJECT_GUIDE.md), [AWS deployment guide](docs/AWS.md), or [project writeup](docs/PROJECT_WRITEUP.md).
 
-**Status:** deployed on AWS on 9 Oct 2026 (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com: API Gateway, Lambda and DynamoDB confirmed working. Bedrock photo suggestions are switched off. Real pilot results have not been collected.
+**Status:** deployed on AWS on 9 Oct 2026 (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com: API Gateway, Lambda and DynamoDB confirmed working. Redeployed on 9 Oct 2026 (~20:15 IST) from commit `e32d701` with the features below; the live site was checked for `/guide`, sign-in, the dashboard (four bin slots, deep-check plan, community goal) and follow-ups. AI is **off** (`EnableAI=0`): a test Bedrock call was refused because AWS was still verifying the new account. Receipt photos and bin-photo suggestions need a redeploy with `EnableAI=1` after verification. Real pilot results have not been collected.
 
 ## Open it
 
@@ -57,6 +57,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 - **My Bin Guide** (`/guide`, public, nothing stored): paste a receipt or order (Zepto, Blinkit, Zomato, a shop bill), or add a photo, and see which bin each *part* goes in (milk pouch → dry, peel → wet, pad → sanitary, battery → special care). Reviewed bilingual rules in `app/guide.py` decide. With `EnableAI=1`, Bedrock Nova Lite reads receipt photos and suggests bins only for items the rules don't cover, labelled "AI suggestion". With AI off, the page says the photo was not read. The receipt teaches the household; it is never shown to the collector or used for scoring.
 - Random deep checks: each week about one floor in five (at least one) is picked for a check below the top layer, using a keyed hash of the operator secret, so residents cannot predict it. The form, the staff page ("I looked below the top layer") and the new tag "wrong items hidden underneath" record it; the dashboard and report count deep checks and hidden items found.
 - Community goal (**proposal**, not an existing scheme): the number of weeks in a row with both bins clean in at least 90% of checks (minimum 5 checks), out of 12. A community that holds the goal could apply for a shared benefit such as priority for a public EV charging point. No household gets points or money, because individual rewards can crowd out the habit. For reference, Delhi EV Policy 2.0 (in force 1 July 2026) bans new petrol two-wheeler registrations from 1 April 2028; it does not make every new car electric.
+- Collection follow-ups: a "keep collection separate" recommendation in the Weekly plan can become a saved action (responsible role, fix date, review date, history). It can be marked reviewed only after collection was observed separate on three distinct dates after the fix, with no mixing recorded. Corrections can reopen the review. These are pilot thresholds, not research standards (`app/followups.py`).
 - Worker safety first: dangerous items flagged by staff become the floor's top action and a column in the weekly report.
 - Week-over-week follow-up: each floor is marked clearly better, clearly worse, or no clear change, comparing only checks where both bins were seen; a change is called clear only beyond 5 points and two standard errors. This is a pilot rule, not a statistical proof (see `docs/FOLLOWUP_EVIDENCE.md`, simulated).
 - Duplicate-check prevention: one check per floor/date/round (morning, evening or staff collection).
@@ -72,7 +73,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 
 ## What remains external
 
-AWS account activation, permissions, deployment, real Bedrock calls, real-bin photo evaluation, warden permission, pilot observations, public repository and recorded submission video. These are not claimed complete.
+Real Bedrock calls (the account is waiting for AWS verification), real-bin photo evaluation, warden permission, pilot observations, public repository and recorded submission video. These are not claimed complete.
 
 The worker page's Hindi voice uses the phone browser's built-in speech; it is silent on phones without a Hindi voice, and the page still works by pictures alone. The worker page has not yet been tested with real staff.
 
@@ -117,6 +118,8 @@ Tests use fresh temporary data directories. `validate.ps1 -Browser` runs backend
 | `app/scoring.py` | Scoring math and bilingual feedback |
 | `app/storage.py` | SQLite and DynamoDB document stores |
 | `app/vision.py` | Image validation and Bedrock suggestion |
+| `app/guide.py` | My Bin Guide: receipt rules (four streams) and Bedrock receipt reading |
+| `app/followups.py` | Collection follow-up actions and their review rule |
 | `web/` | Frontend; no frontend build tool needed |
 | `template.yaml` | AWS infrastructure definition |
 | `docs/AWS.md` | Deployment and real-cloud verification steps |
