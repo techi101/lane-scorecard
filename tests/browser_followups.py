@@ -43,7 +43,7 @@ try:
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(BASE)
         page.locator('input[name=code]').fill(CODE)
-        page.get_by_role('button', name='Open workspace').click()
+        page.get_by_role('button', name='Sign in').click()
         expect(page.locator('#workspace')).to_be_visible()
         headers = {'X-Lane-Request': '1'}
         request = context.request
