@@ -8,7 +8,7 @@ A working, local-first hostel waste-feedback app: record two-bin checks, compare
 
 Start with the [complete project guide](docs/PROJECT_GUIDE.md), [AWS deployment guide](docs/AWS.md), or [project writeup](docs/PROJECT_WRITEUP.md).
 
-**Status:** local application implemented. AWS deployment files included. Nothing has been pushed, published or deployed. Bedrock is disabled until an AWS account is configured. Real pilot results have not been collected.
+**Status:** deployed on AWS on 9 Oct 2026 (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com: API Gateway, Lambda and DynamoDB confirmed working. Bedrock photo suggestions are switched off. Real pilot results have not been collected.
 
 ## Open it
 

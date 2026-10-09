@@ -327,7 +327,9 @@ What `template.yaml` creates when deployed:
 | CloudWatch | Keeps logs so we can show requests happening |
 | Bedrock (optional) | Suggests a rating from a photo; a person always decides |
 
-**Honest status:** nothing is deployed yet. Bedrock is switched off. Do not say “deployed on AWS” until it is.
+**Honest status (9 Oct 2026):** deployed. The live site is https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com (stack `lane-scorecard` in us-east-1). Health reports DynamoDB storage, sign-in works, and logged-out requests are refused. Bedrock (AI photo suggestions) is switched off, so never say AI is used. The live operator code is in `.local/operator-code.txt` on the laptop that deployed it — never in the repo or chat.
+
+**Redeploy after code changes:** `scripts\prepare_aws.py`, then `sam build --use-container`, then `sam deploy` with the `lane` profile. Run the tests first.
 
 ---
 
@@ -412,7 +414,7 @@ A: It takes four taps, needs no reading, speaks Hindi, and the danger button tur
 A: No student names. Floor labels only. Scorecard and worker links are random and can be revoked. Reports exclude notes and photos.
 
 **Q: Where exactly is AWS used?**
-A: Lambda runs the server, API Gateway gives the address, DynamoDB stores data, S3 stores photos, EventBridge runs the weekly job, CloudWatch keeps logs, and Bedrock is optional. Today it runs as a Lambda locally through SAM; cloud deployment needs an account. (Update this answer once deployed.)
+A: Lambda runs the server, API Gateway gives the address, DynamoDB stores data, S3 stores photos, EventBridge runs the weekly job, CloudWatch keeps logs, and Bedrock is optional. It is deployed on AWS at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com; health shows DynamoDB storage. Bedrock is built but switched off.
 
 **Q: What would you build next?**
 A: Amazon Polly for clearer Hindi voice on every phone; offline saving for basements with no signal; a picture poster with a QR code at each bin for students; a longer pilot.

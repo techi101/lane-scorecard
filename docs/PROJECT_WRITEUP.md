@@ -2,7 +2,7 @@
 
 **Theme:** Waste and Energy — waste segregation.
 
-**Status:** complete local pilot application, with an AWS deployment template and supporting scripts. Live AWS deployment and real environmental impact have not been verified.
+**Status:** deployed on AWS (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com, using DynamoDB storage; verified on 9 Oct 2026 with health, sign-in and access checks. Bedrock is switched off. Real environmental impact has not been measured.
 
 ## The problem
 
