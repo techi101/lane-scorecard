@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lane Scorecard small-hostel pilot. Creates billable AWS resources only when explicitly deployed.
+Parameters:
+  OperatorCode:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: A new random operator access code, at least 32 characters. Do not reuse the local code.
+  EnableAI:
+    Type: String
+    Default: '0'
+    AllowedValues: ['0', '1']
+    Description: Set to 1 only after checking Bedrock access in us-east-1.
+Resources:
+  Records:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+  Photos:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  PhotosPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Photos
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt Photos.Arn
+              - !Sub '${Photos.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: '$default'
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 10
+        ThrottlingRateLimit: 5
+  Web:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: artifacts/aws-src/
+      Handler: app.lambda_handler.handler
+      Runtime: python3.12
+      Architectures: [x86_64]
+      MemorySize: 512
+      Timeout: 28
+      Environment:
+        Variables:
+          LANE_TABLE: !Ref Records
+          LANE_PHOTO_BUCKET: !Ref Photos
+          LANE_DATA_DIR: /tmp/lane
+          LANE_ADMIN_CODE: !Ref OperatorCode
+          LANE_SECURE_COOKIE: '1'
+          LANE_ENABLE_AI: !Ref EnableAI
+          LANE_MODEL_ID: us.amazon.nova-lite-v1:0
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Records
+        - S3CrudPolicy:
+            BucketName: !Ref Photos
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource:
+                - !Sub 'arn:${AWS::Partition}:bedrock:*::foundation-model/amazon.nova-lite-v1:0'
+                - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/us.amazon.nova-lite-v1:0'
+      Events:
+        Root:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /
+            Method: ANY
+        Routes:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /{proxy+}
+            Method: ANY
+        WeeklyCards:
+          Type: Schedule
+          Properties:
+            Schedule: cron(30 2 ? * MON *)
+            Description: Monday 08:00 IST; snapshot the week ending Sunday.
+            Input: '{"source":"lane.schedule"}'
+            Enabled: true
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Web}'
+      RetentionInDays: 14
+Outputs:
+  Website:
+    Description: App and API share one origin. No CORS configuration required.
+    Value: !Sub 'https://${Api}.execute-api.${AWS::Region}.${AWS::URLSuffix}'
+  RecordsTable:
+    Value: !Ref Records
+  PhotosBucket:
+    Value: !Ref Photos
