@@ -22,6 +22,10 @@ The warden creates a secret, revocable **collection staff link** and shares it o
 
 Dangerous items come first in the weekly plan (“Make the bins safe to handle”) and have their own column in the warden's report. This design has not yet been tested with real staff; a short conversation with a hostel's housekeeping team is the next step.
 
+## Specific feedback, not generic tips
+
+Checks and staff reports can tag what was wrong: plastic in the green bin, food in the blue bin, or everything in one bag. The floor's scorecard then says what went wrong most often and in how many checks, why it matters, how many of the other floors avoided it, and one thing to try. The text is a fixed, reviewed English/Hindi template rather than AI-generated, and the comparison is floor-level only, never room or person.
+
 ## Checking whether a fix worked
 
 The user is the hostel warden. Each week the warden decides which floor needs attention and what to do. The plan and the weekly report then compare each floor with the previous week and say whether the score improved, got worse, or showed no clear change.

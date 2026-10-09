@@ -34,7 +34,7 @@ Lane Scorecard is a small website that:
 1. lets the **warden** (or a volunteer) record how clean each floor's two bins looked, in about two minutes;
 2. lets **housekeeping and sanitation staff** report the bins at pickup using only pictures and Hindi voice, with no reading;
 3. turns those reports into a **score out of 100** for each floor every week;
-4. gives each floor **one practical next step** (for example, “keep plastic out of the wet bin”), in English or Hindi;
+4. gives each floor **specific feedback**: what went wrong most often (for example “plastic bags went into the green bin”), why it matters, how the other floors did, and one thing to try — in English or Hindi;
 5. then checks **whether that step worked** the next week — and refuses to claim a change that is within normal week-to-week ups and downs;
 6. puts **worker safety first**: if staff flag broken glass, blades, needles or unwrapped sanitary waste, that floor's top action becomes making the bins safe to handle.
 
@@ -66,6 +66,7 @@ It is entered in the **Waste & Energy** track of the WeMakeDevs × AWS **Environ
 | **Operator access code** | The password for the warden's side. Never share it, never put it in the repo. |
 | **Scorecard** | A small private web page for one floor's week, in English or Hindi, shareable by link. |
 | **Worker link** | A secret web address for housekeeping staff. Opens the picture-only page. Can be switched off. |
+| **Issue tag** | A picture button saying *what* was wrong: 🛍 plastic in the green (wet) bin, 🍛 food in the blue (dry) bin, or 👜 everything in one bag. Optional, on both the warden form and the worker page. |
 | **Hazard / dangerous item** | Broken glass, blades, needles or unwrapped sanitary waste found in a bin. |
 | **Demo workspace** | Fake, generated data for showing the app. Always labelled “simulated”. |
 | **Pilot workspace** | Real observations only. Starts empty. |
@@ -115,7 +116,7 @@ Open the app, sign in with the operator access code, then:
 - **Overview** — this week's community score, both-bins-clean rate, coverage, a four-week trend, and recent checks.
 - **Record a check** — choose floor, date and round; tap a rating for each bin; optionally say whether collection kept them separate; optionally add a photo; tick “I personally checked these bins”. Save.
 - **Weekly plan** — one card per floor: the action, the evidence behind it, and the **“vs last week”** line. A button records the next check for that floor. A button downloads the weekly report.
-- **Scorecards** — make a private card for a floor, open it, switch to Hindi, print it, copy its link, or share on WhatsApp. Cards are revoked automatically when data is corrected, so old numbers are never shared.
+- **Scorecards** — the card uses the floor's most frequent issue tag to show four short parts: *What went wrong* (and in how many checks), *Why it matters*, *Other floors* (how many of the other floors avoided it; hidden if fewer than 2 other floors have checks), and *One thing to try*. With no tags, it shows a general tip for the weaker bin. Make a private card for a floor, open it, switch to Hindi, print it, copy its link, or share on WhatsApp. Cards are revoked automatically when data is corrected, so old numbers are never shared.
 - **Observation log** — every check; correct or delete; download a CSV (spreadsheet).
 - **Pilot setup** — add floors (only with permission), and create the **collection staff link**.
 - **How it works** — the scoring rules in plain words.
@@ -189,8 +190,9 @@ The code is in `app/actions.py` (`outcome()` and `check_values()`), and the test
 1. Big buttons with the floor names. (The name is read aloud when tapped.)
 2. The **green bin** picture and three faces: 😊 साफ़ (clean), 😐 थोड़ा मिला (a few wrong), 😟 पूरा मिला हुआ (mixed).
 3. The **blue bin** picture and the same three faces.
-4. A red ⚠️ button for glass, blade, needle or unwrapped sanitary waste.
-5. A big green ✓ भेजें (Send) button. Then a big ✅ and “धन्यवाद” (thank you).
+4. Optional picture tags for what was wrong: 🛍 plastic in the green bin, 🍛 food in the blue bin, 👜 all in one bag.
+5. A red ⚠️ button for glass, blade, needle or unwrapped sanitary waste.
+6. A big green ✓ भेजें (Send) button. Then a big ✅ and “धन्यवाद” (thank you).
 
 Every tap is spoken in Hindi by the phone's built-in voice. The 🔊 button reads out the instructions. If the phone has no Hindi voice, it stays silent and still works by pictures.
 
@@ -246,7 +248,7 @@ The window prints an address (http://127.0.0.1:8765) and an **access code**. Ope
 .venv\Scripts\python.exe tests\browser_check.py
 ```
 
-The first line installs test tools. The second runs 39 automatic checks (expect “39 passed”). The third opens a hidden Microsoft Edge window and clicks through the whole app, saving screenshots in `artifacts\`.
+The first line installs test tools. The second runs 47 automatic checks (expect “47 passed”). The third opens a hidden Microsoft Edge window and clicks through the whole app, saving screenshots in `artifacts\`.
 
 **Run it as an AWS Lambda on your laptop** (no AWS account needed; needs **Docker Desktop**, https://www.docker.com/products/docker-desktop/, started first): follow “Run the Lambda locally” in [AWS.md](AWS.md). Three things trip people up, all explained there: run `scripts\prepare_aws.py` before building, the function is called `Web`, and use `--warm-containers EAGER`.
 
@@ -284,6 +286,7 @@ lane-scorecard/
 │   ├── test_workflow.py      Main behaviour: scoring, sign-in, cards, CSV, photos, security
 │   ├── test_outcome.py       The “vs last week” noise rules
 │   ├── test_worker.py        The staff link and page
+│   ├── test_issues.py        Issue tags and the four-part card
 │   ├── test_cloud_contracts.py  Checks the AWS code talks to AWS correctly (using fakes)
 │   └── browser_check.py      Clicks through the whole app in a real browser
 ├── scripts/
@@ -371,7 +374,7 @@ Keep the **DEMO** label visible whenever demo data is on screen.
 - Follow-up check with the noise band.
 - Worker page with Hindi voice and danger button; worker-safety action.
 - Security: sign-in, private links, rate limits, no student names.
-- 39 automatic tests pass; real-browser check passes on desktop and phone sizes.
+- 47 automatic tests pass; real-browser check passes on desktop and phone sizes.
 - AWS template valid; Lambda runs locally with SAM and Docker.
 
 **Left, and who can do it:**
@@ -398,6 +401,9 @@ A: We built it as an option with AWS Bedrock, but a person always makes the fina
 
 **Q: How do you know the score really changed?**
 A: We compare only checks where both bins were seen, and call a change clear only when it is at least 5 points and bigger than two standard errors of the difference between weeks. With one check a day, the weekly number often moves by about 30 points with no real change, so most single weeks show “no clear change”. We say openly that this is a pilot rule, not a statistical proof.
+
+**Q: Why tags instead of free text?**
+A: Research on feedback (for example UNDP's trial in Bhutan, as reported) points to specific feedback — what exactly went wrong and why — working better than generic tips. Three picture tags make that possible without reading, and the card text is a fixed, reviewed template, so nothing is invented.
 
 **Q: Why should a worker use this?**
 A: It takes four taps, needs no reading, speaks Hindi, and the danger button turns their safety problem into the warden's top action. We have not tested it with real staff yet — that is our next step.

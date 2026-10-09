@@ -2,7 +2,7 @@
 from math import sqrt
 from statistics import mean, variance
 
-from .scoring import RATINGS, STREAMS, TIPS
+from .scoring import ISSUES, RATINGS, STREAMS, TIPS, top_issue
 
 
 CHANGE_POINTS = 5
@@ -80,8 +80,14 @@ def weekly_actions(summary, checks, previous=None):
         elif observed and min(observed.values()) < 100:
             weakest = min(observed, key=observed.get)
             kind, title = "segregation", "Improve separation at the bin"
-            evidence = f"The {'bio' if weakest == 'bio' else 'non-bio'} bin averaged {observed[weakest]:g}/100 across recorded checks."
-            action = TIPS[weakest]
+            issue = top_issue(floor)
+            if issue:
+                # A tagged mistake gives specific advice instead of a generic bin tip.
+                evidence = f"{ISSUES[issue]['what']['en']} Seen in {floor['issues'][issue]} of {floor['checks']} check(s)."
+                action = ISSUES[issue]["fix"]
+            else:
+                evidence = f"The {'bio' if weakest == 'bio' else 'non-bio'} bin averaged {observed[weakest]:g}/100 across recorded checks."
+                action = TIPS[weakest]
         else:
             kind, title = "maintain", "Keep checking consistently"
             evidence = f"Both bins were clean in all {floor['checks']} recorded check(s)."

@@ -92,7 +92,8 @@ def test_csv_appends_hazard_and_reporter(client):
     token = worker_link(client)
     report(client, token, fid, hazard=True)
     rows = list(csv.reader(io.StringIO(client.get('/api/pilot/export.csv').text.lstrip('﻿'))))
-    assert rows[0][-2:] == ['hazard', 'reporter'] and rows[1][-2:] == ['yes', 'worker']
+    row = dict(zip(rows[0], rows[1]))
+    assert row['hazard'] == 'yes' and row['reporter'] == 'worker'
 
 
 def test_worker_page_is_served(client):

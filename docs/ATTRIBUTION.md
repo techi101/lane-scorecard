@@ -2,7 +2,7 @@
 
 Application source, frontend styling and SVG mark were authored for this workspace with OpenAI Codex. The earlier product plan was recovered from the user's Claude history and local research documents. No archived prototype source or third-party visual assets were copied.
 
-Claude Code (Anthropic) later added the collection staff link and worker page (`web/worker.*`, worker endpoints in `app/main.py`, `tests/test_worker.py`; emoji are the device's system emoji, not bundled assets), the week-over-week follow-up check (`app/actions.py`, `app/report.py`, `web/app.js`), `scripts/followup_evidence.py`, `tests/test_outcome.py`, and the local AWS SAM CLI build and run.
+Claude Code (Anthropic) later added the collection staff link and worker page (`web/worker.*`, worker endpoints in `app/main.py`, `tests/test_worker.py`; emoji are the device's system emoji, not bundled assets), issue tags and the four-part scorecard (`app/scoring.py` `ISSUES`, `tests/test_issues.py`), the week-over-week follow-up check (`app/actions.py`, `app/report.py`, `web/app.js`), `scripts/followup_evidence.py`, `tests/test_outcome.py`, and the local AWS SAM CLI build and run.
 
 Direct runtime dependencies:
 

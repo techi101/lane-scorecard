@@ -26,6 +26,7 @@ from .report import render_report
 ROOT = Path(__file__).resolve().parent.parent
 Workspace = Literal["demo", "pilot"]
 Rating = Literal["clean", "few", "mixed", "unseen"]
+Issue = Literal["plastic_in_wet", "food_in_dry", "one_bag"]  # keys of scoring.ISSUES
 
 
 def digest(value):
@@ -58,9 +59,15 @@ class Check(StrictModel):
     nonbio: Rating
     kept_separate: bool | None = None
     hazard: bool | None = None
+    issues: list[Issue] = Field(default_factory=list, max_length=3)
     note: str = Field(default="", max_length=500)
     photos: list[str] = Field(default_factory=list, max_length=2)
     human_confirmed: Literal[True]
+
+    @field_validator("issues")
+    @classmethod
+    def unique_issues(cls, value):
+        return sorted(set(value))
 
     @field_validator("date")
     @classmethod
@@ -88,6 +95,12 @@ class WorkerReport(StrictModel):
     bio: Literal["clean", "few", "mixed"]
     nonbio: Literal["clean", "few", "mixed"]
     hazard: bool = False
+    issues: list[Issue] = Field(default_factory=list, max_length=3)
+
+    @field_validator("issues")
+    @classmethod
+    def unique_issues(cls, value):
+        return sorted(set(value))
 
 
 def seed_demo(store):
@@ -484,6 +497,7 @@ def create_app(directory=None):
         previous = store.get(f"{workspace}:checks", cid)
         value = {"id": cid, "floor_id": payload.floor_id, "date": day, "round": "collection",
                  "bio": payload.bio, "nonbio": payload.nonbio, "kept_separate": None, "hazard": payload.hazard,
+                 "issues": payload.issues,
                  "note": "", "photos": [], "human_confirmed": True, "reporter": "worker",
                  "created_at": previous["created_at"] if previous else now(), "updated_at": now(),
                  "source": "simulated" if workspace == "demo" else "real pilot"}
@@ -501,13 +515,13 @@ def create_app(directory=None):
         floors = {f["id"]: f["name"] for f in store.list(f"{workspace}:floors")}
         output = io.StringIO(newline="")
         writer = csv.writer(output)
-        writer.writerow(["source", "floor", "date", "round", "bio", "nonbio", "kept_separate", "note", "created_at", "hazard", "reporter"])
+        writer.writerow(["source", "floor", "date", "round", "bio", "nonbio", "kept_separate", "note", "created_at", "hazard", "reporter", "issues"])
         def safe(value):
             text = str(value)
             return "'" + text if text.lstrip().startswith(("=", "+", "-", "@", "\t", "\r")) else text
         for check in store.list(f"{workspace}:checks"):
             if start.isoformat() <= check["date"] <= end.isoformat():
-                values = [check["source"], floors.get(check["floor_id"], "Deleted floor"), check["date"], check["round"], check["bio"], check["nonbio"], {True: "yes", False: "no", None: "not observed"}[check["kept_separate"]], check["note"], check["created_at"], {True: "yes", False: "no", None: "not asked"}[check.get("hazard")], check.get("reporter", "operator")]
+                values = [check["source"], floors.get(check["floor_id"], "Deleted floor"), check["date"], check["round"], check["bio"], check["nonbio"], {True: "yes", False: "no", None: "not observed"}[check["kept_separate"]], check["note"], check["created_at"], {True: "yes", False: "no", None: "not asked"}[check.get("hazard")], check.get("reporter", "operator"), ";".join(check.get("issues", []))]
                 writer.writerow([safe(v) for v in values])
         return Response("\ufeff" + output.getvalue(), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="lane-{workspace}-{end.isoformat()}.csv"'})
 
