@@ -6,11 +6,11 @@
 
 ## The problem
 
-Two labelled bins do not tell hostel staff whether waste is being separated consistently or mixed again at collection. Lane Scorecard turns short, repeated observations into private floor-level feedback and a weekly follow-up plan.
+Two labelled bins do not tell campus staff whether waste is being separated consistently or mixed again at collection. Lane Scorecard turns short, repeated observations into private location-level feedback and a weekly follow-up plan.
 
 ## The build
 
-An operator sets up permitted floors, records both bin ratings and optionally notes what happens during collection. The app calculates transparent seven-day scores, keeps missing evidence visible, and compares consecutive weeks. Residents can receive a private English/Hindi scorecard with one practical action. A weekly operator report summarises scores, coverage and follow-up actions while excluding private notes and photos.
+An operator sets up permitted locations, records both bin ratings and optionally notes what happens during collection. The app calculates transparent seven-day scores, keeps missing evidence visible, and compares consecutive weeks. Residents can receive a private English/Hindi scorecard with one practical action. A weekly operator report summarises scores, coverage and follow-up actions while excluding private notes and photos.
 
 The app runs locally with FastAPI and SQLite. Its responsive browser interface supports phone-based checks. Demo data and real-pilot data are kept separate. Corrections revoke old scorecard links, and every final rating remains a human decision.
 
@@ -18,19 +18,19 @@ The app runs locally with FastAPI and SQLite. Its responsive browser interface s
 
 Housekeeping and sanitation staff see every bin at every pickup, and when residents mix waste they are the ones who sort it by hand, including broken glass, blades and unwrapped sanitary waste. Many do not read English, and some do not read at all.
 
-The warden creates a secret, revocable **collection staff link** and shares it on WhatsApp. It opens a picture-only page: tap the floor, tap a face for the green (wet) bin and the blue (dry) bin, tap the red button if something dangerous was in it, and press send. Every tap is spoken in Hindi. There is no sign-in and nothing to read. Reports count as checks in a separate **collection** round, so daily staff reports also give the follow-up check enough data to see real change.
+The pilot lead creates a secret, revocable **collection staff link** and shares it on WhatsApp. It opens a picture-only page: tap the location, tap a face for the green (wet) bin and the blue (dry) bin, tap the red button if something dangerous was in it, and press send. Every tap is spoken in Hindi. There is no sign-in and nothing to read. Reports count as checks in a separate **collection** round, so daily staff reports also give the follow-up check enough data to see real change.
 
-Dangerous items come first in the weekly plan (“Make the bins safe to handle”) and have their own column in the warden's report. This design has not yet been tested with real staff; a short conversation with a hostel's housekeeping team is the next step.
+Dangerous items come first in the weekly plan (“Make the bins safe to handle”) and have their own column in the pilot lead's report. This design has not yet been tested with real staff; a short conversation with a campus housekeeping team is the next step.
 
 ## Specific feedback, not generic tips
 
-Checks and staff reports can tag what was wrong: plastic in the green bin, food in the blue bin, or everything in one bag. The floor's scorecard then says what went wrong most often and in how many checks, why it matters, how many of the other floors avoided it, and one thing to try. The text is a fixed, reviewed English/Hindi template rather than AI-generated, and the comparison is floor-level only, never room or person.
+Checks and staff reports can tag what was wrong: plastic in the green bin, food in the blue bin, or everything in one bag. The location's scorecard then says what went wrong most often and in how many checks, why it matters, how many of the other locations avoided it, and one thing to try. The text is a fixed, reviewed English/Hindi template rather than AI-generated, and the comparison is location-level only, never room or person.
 
 ## Checking whether a fix worked
 
-The user is the hostel warden. Each week the warden decides which floor needs attention and what to do. The plan and the weekly report then compare each floor with the previous week and say whether the score improved, got worse, or showed no clear change.
+The user is the campus pilot lead. Each week the pilot lead decides which location needs attention and what to do. The plan and the weekly report then compare each location with the previous week and say whether the score improved, got worse, or showed no clear change.
 
-The comparison uses only checks where both bins were seen, and calls a change clear only when it is at least 5 points and larger than two standard errors of the week-to-week difference. This is a rule for a small pilot, not a statistical proof. It matters: on the simulated demo data, with one check a day, a floor's weekly score often moves by about 30 points with no real change, so a naive "down 20 points" label would mislead the warden. Running both daily rounds, or comparing over longer windows, is needed to detect real change. `python scripts/followup_evidence.py` regenerates the table in [FOLLOWUP_EVIDENCE.md](FOLLOWUP_EVIDENCE.md); every row there is simulated.
+The comparison uses only checks where both bins were seen, and calls a change clear only when it is at least 5 points and larger than two standard errors of the week-to-week difference. This is a rule for a small pilot, not a statistical proof. It matters: on the simulated demo data, with one check a day, a location's weekly score often moves by about 30 points with no real change, so a naive "down 20 points" label would mislead the pilot lead. Running both daily rounds, or comparing over longer windows, is needed to detect real change. `python scripts/followup_evidence.py` regenerates the table in [FOLLOWUP_EVIDENCE.md](FOLLOWUP_EVIDENCE.md); every row there is simulated.
 
 ## Where AWS fits
 

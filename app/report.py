@@ -1,6 +1,8 @@
 """Standalone, printable aggregate report; deliberately excludes notes and photos."""
 from html import escape
 
+from .scoring import area_summary
+
 
 def render_report(summary, actions, workspace, lang="en", goal=None):
     def show(value, suffix=""):
@@ -23,8 +25,12 @@ def render_report(summary, actions, workspace, lang="en", goal=None):
         "<p>A community that holds the goal could apply for a shared benefit, for example priority for a public EV charging point "
         "or an e-rickshaw stand. This is a proposed pilot idea, not an existing government scheme. No household gets points or money.</p>")
     source = "DEMO — SIMULATED OBSERVATIONS" if workspace == "demo" else "REAL PILOT OBSERVATIONS"
+    area_rows = "".join(
+        f"<tr><th>{escape(a['area'])}</th><td>{a['locations']}</td><td>{show(a['score'])}</td><td>{a['checks']}</td><td>{a['hazards']}</td></tr>"
+        for a in area_summary(summary)
+    )
     rows = "".join(
-        f"<tr><th>{escape(f['name'])}</th><td>{show(f['score'])}</td><td>{f['checks']}</td>"
+        f"<tr><th>{escape(f['name'])}{'<br><small>' + escape(f['area']) + '</small>' if f.get('area') else ''}</th><td>{show(f['score'])}</td><td>{f['checks']}</td>"
         f"<td>{show(f['coverage'], '%')}</td><td>{f.get('hazards', 0)}</td><td>{change(f.get('outcome'))}</td></tr>" for f in actions
     )
     steps = "".join(
@@ -42,12 +48,14 @@ th,td{{text-align:left;padding:12px;border-bottom:1px solid #d4dfca}}article{{bo
 @media print{{body{{margin:0;max-width:none;font-size:12px}}h1{{font-size:28px}}thead{{display:table-header-group}}}}</style></head>
 <body><p class="source">{source}</p><h1>Small checks. Better habits.</h1><p>Lane Scorecard · Weekly operator report<br>
 {summary['start']} to {summary['end']} (inclusive)</p>
-<div class="metrics">Community score: <strong>{show(summary['score'])}/100</strong> ·
+<div class="metrics">Campus score: <strong>{show(summary['score'])}/100</strong> ·
 Both bins clean: <strong>{show(summary['both_clean_rate'], '%')}</strong> ·
 Checks: <strong>{summary['checks']}</strong> · Coverage: <strong>{show(summary['coverage'], '%')}</strong><br>
 Kept separate during collection: {show(summary['separate_rate'], '%')} ({summary['cart_observed']} observations)<br>
 Reports from collection staff: <strong>{summary.get('worker_reports', 0)}</strong> · Dangerous items flagged: <strong>{summary.get('hazards', 0)}</strong><br>
 {extra}Deep checks (below the top layer): <strong>{summary.get('deep_checks', 0)}</strong> · hidden wrong items found: <strong>{summary.get('hidden_found', 0)}</strong></div>
+<h2>By campus area</h2><table><thead><tr><th>Area</th><th>Locations</th><th>Score /100</th><th>Checks</th><th>Dangerous items</th></tr></thead>
+<tbody>{area_rows or '<tr><td colspan="5">No locations have been added.</td></tr>'}</tbody></table>
 <h2>Observations by location</h2><table><thead><tr><th>Location</th><th>Score /100</th><th>Checks</th><th>Coverage</th><th>Dangerous items</th><th>Vs last week</th></tr></thead>
 <tbody>{rows or '<tr><td colspan="6">No locations have been added.</td></tr>'}</tbody></table>
 <h2>Next round: one action per location</h2>{steps or '<p>Add a floor and make the first check with permission.</p>'}
@@ -55,7 +63,7 @@ Reports from collection staff: <strong>{summary.get('worker_reports', 0)}</stron
 Each location averages its available bin-type averages; the community score averages scored locations.
 Coverage counts observed bins within recorded checks. It does not measure rounds that were never recorded.</p>
 <p>Actions are rule-based: dangerous items flagged by collection staff first, then reported collection mixing, then missing observations, then separation at the bin.
-Missing evidence is not a clean result. Location order is alphabetical, not a public ranking.</p>
+Missing evidence is not a clean result. Locations are grouped by area, then listed alphabetically; this is not a public ranking.</p>
 <p>"Vs last week" compares only checks where both bins were seen. It calls a change clear only when it is at least 5 points and larger than
 two standard errors of the difference: a rule for a small pilot, not a statistical proof. With one check a day, weekly scores often move by about 30 points
 without any real change, so most single weeks show no clear change.</p>

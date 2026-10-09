@@ -16,12 +16,12 @@ ALL_STREAMS = STREAMS + EXTRA_STREAMS
 STREAM_LABELS = {"bio": "green (wet)", "nonbio": "blue (dry)", "sanitary": "sanitary", "special": "special-care"}
 TIPS = {
     "bio": {
-        "en": "Keep food scraps in the bio bin. Remove plastic bags and wrappers before putting food waste in it.",
-        "hi": "खाने के बचे हिस्से जैविक कूड़ेदान में डालें। प्लास्टिक की थैली और रैपर अलग निकालें।",
+        "en": "Keep food scraps in the green (kitchen waste) bin. Take plastic bags and wrappers out first: they go in the blue bin.",
+        "hi": "खाने के बचे हिस्से हरे (रसोई कचरे वाले) डिब्बे में डालें। प्लास्टिक की थैली और रैपर पहले निकालें: वे नीले डिब्बे में जाते हैं।",
     },
     "nonbio": {
-        "en": "Empty leftover food into the bio bin. Keep dry packaging in the non-bio bin, following your collector’s instructions.",
-        "hi": "बचा हुआ खाना जैविक कूड़ेदान में डालें। सूखी पैकिंग गैर-जैविक कूड़ेदान में रखें और कचरा लेने वाले के निर्देश मानें।",
+        "en": "Empty leftover food into the green bin. Dry packaging, cans and bottles go in the blue (recyclable) bin.",
+        "hi": "बचा हुआ खाना हरे डिब्बे में डालें। सूखी पैकिंग, कैन और बोतलें नीले (रीसायकल) डिब्बे में जाती हैं।",
     },
     "sanitary": {
         "en": "Wrap used pads and diapers in paper or their pouch and keep them in the separate sanitary bin, never with food or dry waste.",
@@ -79,6 +79,27 @@ def issue_counts(rows):
     return {k: sum(k in c.get("issues", []) for c in rows) for k in ISSUES}
 
 
+def location_order(floor):
+    """Group by campus area (no area last), then by name."""
+    area = floor.get("area") or ""
+    return (area == "", area.casefold(), floor["name"].casefold())
+
+
+def area_summary(summary):
+    """Per-area roll-up for a campus: locations, checks, average score, dangerous items."""
+    areas = {}
+    for f in summary["floors"]:
+        a = areas.setdefault(f.get("area") or "Other", {"area": f.get("area") or "Other", "locations": 0, "checks": 0, "hazards": 0, "scores": []})
+        a["locations"] += 1; a["checks"] += f["checks"]; a["hazards"] += f.get("hazards", 0)
+        if f["score"] is not None:
+            a["scores"].append(f["score"])
+    rows = []
+    for a in sorted(areas.values(), key=lambda a: (a["area"] == "Other", a["area"].casefold())):
+        scores = a.pop("scores")
+        rows.append({**a, "score": average(scores), "scored": len(scores)})
+    return rows
+
+
 def today():
     return datetime.now(IST).date()
 
@@ -113,7 +134,7 @@ def summarize(floors, checks, end):
         seen, expected = seen_expected(own)
         complete = [c for c in own if all(c[s] != "unseen" for s in STREAMS)]
         results.append({
-            "id": floor["id"], "name": floor["name"], "score": average(list(streams.values())),
+            "id": floor["id"], "name": floor["name"], "area": floor.get("area", ""), "score": average(list(streams.values())),
             "streams": streams, "checks": len(own), "seen": seen,
             "expected": expected,
             "coverage": round(100 * seen / expected, 1) if expected else None,

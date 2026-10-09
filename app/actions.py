@@ -2,7 +2,7 @@
 from math import sqrt
 from statistics import mean, variance
 
-from .scoring import ALL_STREAMS, ISSUES, RATINGS, STREAM_LABELS, STREAMS, TIPS, top_issue
+from .scoring import ALL_STREAMS, ISSUES, RATINGS, STREAM_LABELS, STREAMS, TIPS, location_order, top_issue
 
 
 CHANGE_POINTS = 5
@@ -51,7 +51,7 @@ def weekly_actions(summary, checks, previous=None):
     previous_floors = {f["id"]: f for f in previous["floors"]} if previous else {}
     earlier_rows = [c for c in checks if previous["start"] <= c["date"] <= previous["end"]] if previous else []
     actions = []
-    for floor in sorted(summary["floors"], key=lambda f: f["name"].casefold()):
+    for floor in sorted(summary["floors"], key=location_order):
         own = [c for c in rows if c["floor_id"] == floor["id"]]
         mixed_collection = sum(c["kept_separate"] is False for c in own)
         missing = floor["expected"] - floor["seen"]
@@ -96,7 +96,7 @@ def weekly_actions(summary, checks, previous=None):
         actions.append({"floor_id": floor["id"], "name": floor["name"], "kind": kind,
                         "title": title, "evidence": evidence, "action": action,
                         "checks": floor["checks"], "coverage": floor["coverage"], "score": floor["score"],
-                        "hazards": floor["hazards"], "worker_reports": floor["worker_reports"],
+                        "hazards": floor["hazards"], "worker_reports": floor["worker_reports"], "area": floor.get("area", ""),
                         "outcome": outcome(floor, previous_floors.get(floor["id"]), check_values(own),
                                            check_values([c for c in earlier_rows if c["floor_id"] == floor["id"]]))})
     return actions

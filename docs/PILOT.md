@@ -2,7 +2,7 @@
 
 ## Before collecting
 
-Get permission from the hostel/space operator. Agree which shared bins can be checked, when observations can happen, who sees feedback, and when data should be deleted. Use floor labels only. Do not photograph people, room numbers, documents or other identifying details. Do not handle hazardous waste to improve a photo.
+Get permission from the campus/space operator. Agree which shared bins can be checked, when observations can happen, who sees feedback, and when data should be deleted. Use location labels only. Do not photograph people, room numbers, documents or other identifying details. Do not handle hazardous waste to improve a photo.
 
 The app supports the site's existing bio/non-bio arrangement. It does not certify national waste-rule compliance, and it cannot verify how collectors actually process waste later.
 
@@ -10,11 +10,11 @@ The app supports the site's existing bio/non-bio arrangement. It does not certif
 
 If the app is unavailable, record these fields on paper, then enter the original observation date later:
 
-| Date | Round | Floor | Bio | Non-bio | Kept separate on collection? | Note |
+| Date | Round | Location | Bio | Non-bio | Kept separate on collection? | Note |
 |---|---|---|---|---|---|---|
-| Actual date | Morning/evening | Consented floor label | Clean/few/mixed/not seen | Same choices | Yes/no/not observed | No personal information |
+| Actual date | Morning/evening | Consented location label | Clean/few/mixed/not seen | Same choices | Yes/no/not observed | No personal information |
 
-Inspect the same floors at comparable times. Empty or obscured bins should be “not seen”, rather than assumed clean. Missing entire rounds are not automatically represented in the app, so keep a separate record of planned vs completed rounds.
+Inspect the same locations at comparable times. Empty or obscured bins should be “not seen”, rather than assumed clean. Missing entire rounds are not automatically represented in the app, so keep a separate record of planned vs completed rounds.
 
 Collect a baseline round, share the first scorecard, then repeat. Report counts, coverage and dates with any percentage. For example: “Both bins were clean in X of Y fully observed checks.” Do not turn a three-day before/after change into a causal claim.
 

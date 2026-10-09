@@ -29,7 +29,7 @@ def test_worker_sees_only_floor_names(client):
     token = worker_link(client)
     client.cookies.clear()
     view = client.get(f'/api/worker/{token}').json()
-    assert view == {'demo': False, 'today': today().isoformat(), 'floors': [{'id': fid, 'name': 'Bhaskar · First floor'}]}
+    assert view == {'demo': False, 'today': today().isoformat(), 'floors': [{'id': fid, 'name': 'Bhaskar · First floor', 'area': ''}]}
 
 
 def test_worker_report_counts_as_a_collection_check(client):

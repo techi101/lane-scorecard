@@ -27,7 +27,7 @@ Top-left **Workspace** → **Demo**. ✅ A “DEMO / simulated” label, 6 locat
 
 Use your own name in the label so testers don't collide with each other.
 
-### Step 4 — record a check as the warden
+### Step 4 — record a check as the pilot lead
 1. **Record a check** → your test location, today, *Morning*.
 2. Green (bio) bin **A few wrong items**, blue (non-bio) **Clean**.
 3. *What was wrong?* → tick **🛍 Plastic in the green (wet) bin** → tick *I personally checked these bins* → save. ✅ “Observation saved”.
@@ -89,7 +89,7 @@ git pull
 | `git pull` | Download the team's latest changes | “Already up to date” or a list of files |
 | `pip install -r requirements-dev.txt` | Install the test tools (once) | Finishes without red errors |
 | `pytest -q` | Run all automatic checks | `77 passed` (or more, if tests were added) |
-| `browser_check.py` | Hidden Edge browser clicks through the whole warden app | `"result": "PASS"` and `"browser_errors": []` |
+| `browser_check.py` | Hidden Edge browser clicks through the whole pilot lead app | `"result": "PASS"` and `"browser_errors": []` |
 | `browser_followups.py` | Same, for collection follow-ups | `"result": "PASS"` |
 
 These run on your laptop only, with their own throwaway data. They never touch the live site.

@@ -46,15 +46,26 @@ function rateBlock(stream, n) {
     <div class="rate">${RATES.map(r => `<button style="--c:${r.c}" data-rate="${stream}" data-value="${r.value}" aria-pressed="${s[stream] === r.value}" aria-label="${bin.say}: ${r.hi}"><span class="face">${r.face}</span>${r.hi}<span class="en">${r.en}</span></button>`).join('')}</div>`;
 }
 
+// Places arrive sorted by area; show an area heading only when the campus uses areas.
+function areaGroups() {
+  const groups = [];
+  for (const f of s.floors) {
+    const area = f.area || (s.floors.some(x => x.area) ? 'Other' : '');
+    if (!groups.length || groups[groups.length - 1][0] !== area) groups.push([area, []]);
+    groups[groups.length - 1][1].push(f);
+  }
+  return groups;
+}
+
 function render() {
   if (!s.floors.length) {
-    app.innerHTML = `<div class="done"><div class="big">🏢</div><p>अभी कोई जगह नहीं जोड़ी गई।<span class="en">No places yet. Ask the warden to add them.</span></p></div>`;
+    app.innerHTML = `<div class="done"><div class="big">🏢</div><p>अभी कोई जगह नहीं जोड़ी गई।<span class="en">No places yet. Ask the person running the pilot to add them.</span></p></div>`;
     return;
   }
   const ready = s.floor && s.bio && s.nonbio && !s.sending;
   app.innerHTML = `<div class="top"><h1>कूड़ेदान रिपोर्ट <span class="en">Bin report</span></h1>${s.demo ? '<span class="demo">DEMO</span>' : ''}<button class="speak" data-action="help" aria-label="सुनें / Listen">🔊</button></div>
     <div class="step"><b>1</b>जगह चुनें <span class="en">Choose the place</span></div>
-    <div class="grid">${s.floors.map(f => `<button class="tile" data-floor="${esc(f.id)}" aria-pressed="${s.floor === f.id}">${esc(f.name)}</button>`).join('')}</div>
+    ${areaGroups().map(([area, fs]) => `${area ? `<div class="area">${esc(area)}</div>` : ''}<div class="grid">${fs.map(f => `<button class="tile" data-floor="${esc(f.id)}" aria-pressed="${s.floor === f.id}">${esc(f.name)}</button>`).join('')}</div>`).join('')}
     ${rateBlock('bio', 2)}${rateBlock('nonbio', 3)}
     <div class="step"><b>4</b>क्या ग़लत था? <span class="en">What was wrong? (optional)</span></div>
     <div class="rate">${ISSUES.map(i => `<button style="--c:var(--amber)" data-issue="${i.key}" aria-pressed="${s.issues.includes(i.key)}" aria-label="${i.hi}"><span class="face">${i.pic}</span>${i.hi}<span class="en">${i.en}</span></button>`).join('')}</div>
@@ -112,6 +123,6 @@ app.addEventListener('click', e => {
     s.floors = d.floors; s.demo = d.demo;
     render();
   } catch (_) {
-    app.innerHTML = `<div class="done"><div class="big">🔗</div><p>यह लिंक काम नहीं कर रहा। वार्डन से नया लिंक माँगें।<span class="en">This link is not working. Ask the warden for a new link.</span></p></div>`;
+    app.innerHTML = `<div class="done"><div class="big">🔗</div><p>यह लिंक काम नहीं कर रहा। पायलट चलाने वाले से नया लिंक माँगें।<span class="en">This link is not working. Ask the person running the pilot for a new link.</span></p></div>`;
   }
 })();

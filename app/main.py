@@ -17,7 +17,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .scoring import STREAMS, card_data, community_goal, deep_check_plan, summarize, today
+from .scoring import STREAMS, card_data, community_goal, deep_check_plan, summarize, today, location_order
 from .guide import build as build_guide, items_from_text, read_receipt
 from .storage import Store
 from .vision import sanitize, suggest
@@ -27,6 +27,12 @@ from .followups import register_routes as register_followups
 
 ROOT = Path(__file__).resolve().parent.parent
 Workspace = Literal["demo", "pilot"]
+MAX_LOCATIONS = 200  # a whole campus, not one hostel
+DEMO_LOCATIONS = [  # (name, area) for the simulated campus demo
+    ("Academic block 1 · entrance", "Academic blocks"), ("Library · entrance", "Library"),
+    ("Main canteen · front", "Canteen & food"), ("Nescafe kiosk", "Canteen & food"),
+    ("Boys hostel · gate", "Hostels"), ("Sports complex · track", "Sports"),
+]
 Rating = Literal["clean", "few", "mixed", "unseen"]
 Issue = Literal["plastic_in_wet", "food_in_dry", "hidden_below", "one_bag"]  # keys of scoring.ISSUES
 SeenRating = Literal["clean", "few", "mixed"]
@@ -50,6 +56,8 @@ class Login(StrictModel):
 
 class Floor(StrictModel):
     name: str = Field(min_length=1, max_length=60)
+    # Campus area the bin pair belongs to, e.g. "Academic blocks", "Hostels". Optional; empty means "Other".
+    area: str = Field(default="", max_length=40)
     permission: bool
 
 
@@ -121,13 +129,26 @@ class WorkerReport(StrictModel):
 
 
 def seed_demo(store):
-    if store.get("meta", "demo-seeded"):
+    if store.get("meta", "demo-seeded-campus"):
         return
+    # Replace the older hostel-floor demo, if present. Only generated rows are touched; locations
+    # people added to the demo themselves are kept.
+    if store.get("meta", "demo-seeded"):
+        generated = {f"demo-floor-{i}" for i in range(len(DEMO_LOCATIONS))}
+        for check in store.list("demo:checks"):
+            if check["floor_id"] in generated:
+                store.delete("demo:checks", check["id"])
+        for fid in generated:
+            store.delete("demo:floors", fid)
+        for card in store.list("cards"):
+            if card["workspace"] == "demo":
+                store.delete("cards", digest(card["token"]))
+                store.delete("card-index", card["index"])
     rng = random.Random(101)
     floors, checks = [], []
-    for i, name in enumerate(["Ground floor", "First floor", "Second floor", "Third floor", "Fourth floor", "Fifth floor"]):
+    for i, (name, area) in enumerate(DEMO_LOCATIONS):
         fid = f"demo-floor-{i}"
-        floors.append({"id": fid, "name": name, "permission": True, "created_at": now()})
+        floors.append({"id": fid, "name": name, "area": area, "permission": True, "created_at": now()})
         for ago in range(27, -1, -1):
             day = (today() - timedelta(days=ago)).isoformat()
             cid = f"{day}:{fid}:morning"
@@ -137,6 +158,7 @@ def seed_demo(store):
     store.put_many("demo:floors", floors)
     store.put_many("demo:checks", checks)
     store.put("meta", "demo-seeded", {"at": now()})
+    store.put("meta", "demo-seeded-campus", {"at": now()})
 
 
 def make_card(store, workspace, floor_id, end):
@@ -289,8 +311,8 @@ def create_app(directory=None):
         if not payload.permission:
             raise HTTPException(422, "Confirm permission before adding a floor.")
         existing = store.list(f"{workspace}:floors")
-        if len(existing) >= 50:
-            raise HTTPException(409, "This pilot supports up to 50 floors.")
+        if len(existing) >= MAX_LOCATIONS:
+            raise HTTPException(409, f"This pilot supports up to {MAX_LOCATIONS} bin locations.")
         if any(f["name"].casefold() == payload.name.casefold() for f in existing):
             raise HTTPException(409, "A floor with this name already exists.")
         value = {**payload.model_dump(), "id": str(uuid4()), "created_at": now()}
@@ -498,9 +520,9 @@ def create_app(directory=None):
     @app.get("/api/worker/{token}")
     def worker_view(token: str):
         workspace = worker_workspace(token)
-        floors = sorted(store.list(f"{workspace}:floors"), key=lambda f: f["name"].casefold())
+        floors = sorted(store.list(f"{workspace}:floors"), key=location_order)
         return {"demo": workspace == "demo", "today": today().isoformat(),
-                "floors": [{"id": f["id"], "name": f["name"]} for f in floors]}
+                "floors": [{"id": f["id"], "name": f["name"], "area": f.get("area", "")} for f in floors]}
 
     @app.post("/api/worker/{token}/reports", status_code=201)
     def worker_report(token: str, payload: WorkerReport):

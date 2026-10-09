@@ -27,18 +27,18 @@ Read it in order the first time. It takes about 40 minutes. After that, use the 
 
 ## 1. The project in one minute
 
-Hostels put two bins on every floor: a **green bin for wet waste** (food, peels, tea leaves) and a **blue bin for dry waste** (packets, paper, bottles). Keeping them separate is called **waste segregation**. In practice people mix them, and nobody tells them.
+Across the NSUT campus, bins stand in pairs: a **green bin labelled “Degradable waste (kitchen waste)”** for food, peels and tea leaves, and a **blue bin labelled “Non-degradable waste (recyclable)”** for packets, paper, cans and bottles. Each pair is one **location** in the app, grouped into **areas** such as Academic blocks, Hostels, Canteen & food or Library. Keeping them separate is called **waste segregation**. In practice people mix them, and nobody tells them.
 
 Lane Scorecard is a small website that:
 
-1. lets the **warden** (or a volunteer) record how clean each floor's two bins looked, in about two minutes;
+1. lets the **pilot lead** (or a volunteer) record how clean each location's two bins looked, in about two minutes;
 2. lets **housekeeping and sanitation staff** report the bins at pickup using only pictures and Hindi voice, with no reading;
-3. turns those reports into a **score out of 100** for each floor every week;
-4. gives each floor **specific feedback**: what went wrong most often (for example “plastic bags went into the green bin”), why it matters, how the other floors did, and one thing to try — in English or Hindi;
+3. turns those reports into a **score out of 100** for each location every week;
+4. gives each location **specific feedback**: what went wrong most often (for example “plastic bags went into the green bin”), why it matters, how the other locations did, and one thing to try — in English or Hindi;
 5. then checks **whether that step worked** the next week — and refuses to claim a change that is within normal week-to-week ups and downs;
-6. puts **worker safety first**: if staff flag broken glass, blades, needles or unwrapped sanitary waste, that floor's top action becomes making the bins safe to handle.
+6. puts **worker safety first**: if staff flag broken glass, blades, needles or unwrapped sanitary waste, that location's top action becomes making the bins safe to handle.
 
-No student names are collected. Floors are compared with the hostel average, not ranked publicly. Recognition, not prizes or money.
+No student names are collected. Locations are compared with the campus average, not ranked publicly. Recognition, not prizes or money.
 
 It is entered in the **Waste & Energy** track of the WeMakeDevs × AWS **Environmental Hacks** hackathon (8–11 October 2026).
 
@@ -56,17 +56,19 @@ It is entered in the **Waste & Energy** track of the WeMakeDevs × AWS **Environ
 | **Segregation** | Keeping wet and dry waste in separate bins. |
 | **Bio / wet waste** | Food and other things that rot. Green bin. In the code this stream is called `bio`. |
 | **Non-bio / dry waste** | Packets, paper, plastic, metal. Blue bin. In the code: `nonbio`. |
-| **Floor** | One unit we score, for example “Bhaskar · First floor”. |
-| **Check / observation** | One look at a floor's two bins, with a rating for each. |
-| **Round** | When the check happened: `morning`, `evening`, or `collection` (a staff report at pickup). One check per floor, per day, per round. |
+| **Location** | One green/blue bin pair we score, for example “Library · entrance”. Up to 200 per campus. |
+| **Area** | An optional group of locations, for example Academic blocks, Hostels, Canteen & food. The plan, the worker page and the report group locations by area, and the report has a per-area summary. |
+| **Pilot lead** | Whoever runs the pilot and signs in: your team, a warden, or the estate office. |
+| **Check / observation** | One look at a location's two bins, with a rating for each. |
+| **Round** | When the check happened: `morning`, `evening`, or `collection` (a staff report at pickup). One check per location, per day, per round. |
 | **Rating** | How a bin looked: clean, a few wrong items, mixed, or not seen. |
-| **Score** | A number from 0 to 100 for a floor's week. Higher is cleaner. |
+| **Score** | A number from 0 to 100 for a location's week. Higher is cleaner. |
 | **Coverage** | Out of the bins we should have looked at, how many we actually saw. |
-| **Operator / warden** | The person who signs in and manages the pilot. |
-| **Operator access code** | The password for the warden's side. Never share it, never put it in the repo. |
-| **Scorecard** | A small private web page for one floor's week, in English or Hindi, shareable by link. |
+| **Operator / pilot lead** | The person who signs in and manages the pilot. |
+| **Operator access code** | The password for the pilot lead's side. Never share it, never put it in the repo. |
+| **Scorecard** | A small private web page for one location's week, in English or Hindi, shareable by link. |
 | **Worker link** | A secret web address for housekeeping staff. Opens the picture-only page. Can be switched off. |
-| **Issue tag** | A picture button saying *what* was wrong: 🛍 plastic in the green (wet) bin, 🍛 food in the blue (dry) bin, or 👜 everything in one bag. Optional, on both the warden form and the worker page. |
+| **Issue tag** | A picture button saying *what* was wrong: 🛍 plastic in the green (wet) bin, 🍛 food in the blue (dry) bin, or 👜 everything in one bag. Optional, on both the pilot lead form and the worker page. |
 | **Hazard / dangerous item** | Broken glass, blades, needles or unwrapped sanitary waste found in a bin. |
 | **Demo workspace** | Fake, generated data for showing the app. Always labelled “simulated”. |
 | **Pilot workspace** | Real observations only. Starts empty. |
@@ -96,13 +98,13 @@ It is entered in the **Waste & Energy** track of the WeMakeDevs × AWS **Environ
 
 ## 3. The problem, and the people it is for
 
-**The problem.** Two labelled bins do not tell anyone whether waste is actually being separated, or whether it gets mixed again at collection. Residents get no feedback. Wardens have no evidence to act on. And when waste is mixed, someone sorts it by hand.
+**The problem.** A first look at our photos of NSUT's paired bins (night of 9 October; not yet confirmed or recorded as checks) suggests dry plastic and packaging in the green bins while the blue bins look right, and the canteen putting everything into black bags. Two labelled bins do not tell anyone whether waste is actually being separated, or whether it gets mixed again at collection. Residents get no feedback. Pilot leads have no evidence to act on. And when waste is mixed, someone sorts it by hand.
 
 **The people** (these are our reasoning, not yet interviews — talk to real people before claiming them):
 
-- **Warden** — has many jobs and little time. Wants one clear thing to do per floor and a printable sheet for the hostel meeting. *Decision we help with:* “Which floor needs attention this week, and what should I do?”
+- **Pilot lead** (the team, a warden or the estate office) — has many jobs and little time. Wants one clear thing to do per location, a view of which campus areas are worst, and a printable sheet for the review meeting. *Decision we help with:* “Which location needs attention this week, and what should I do?”
 - **Housekeeping / sanitation staff** — see every bin at every pickup. When residents mix waste, they sort it by hand, sometimes with glass, blades or sanitary waste inside. Many do not read English; some do not read at all. Usually have WhatsApp on a basic Android phone.
-- **Students** — do not read long notices and do not want to be shamed. Often unsure where greasy food-delivery containers go. A floor-level, non-public comparison and one short tip is what they will actually look at.
+- **Students** — do not read long notices and do not want to be shamed. Often unsure where greasy food-delivery containers go. A location-level, non-public comparison and one short tip is what they will actually look at.
 
 **What makes us different from other teams.** In the Waste & Energy track, other projects (for example SortSmart, Swachh.ai, Indohood, BinGo, KabadiPlus) focus on sorting advice for households, item classification, or reward points. We focus on two things nobody else in our track does: **checking whether an action actually worked**, and **giving the sanitation worker a voice**.
 
@@ -114,11 +116,11 @@ Open the app, sign in with the operator access code, then:
 
 - **Workspace switch (top left)** — choose *Demo* (fake data, for showing) or *Your real pilot* (real data only).
 - **Overview** — this week's community score, both-bins-clean rate, coverage, a four-week trend, and recent checks.
-- **Record a check** — choose floor, date and round; tap a rating for each bin; optionally say whether collection kept them separate; optionally add a photo; tick “I personally checked these bins”. Save.
-- **Weekly plan** — one card per floor: the action, the evidence behind it, and the **“vs last week”** line. A button records the next check for that floor. A button downloads the weekly report.
-- **Scorecards** — the card uses the floor's most frequent issue tag to show four short parts: *What went wrong* (and in how many checks), *Why it matters*, *Other floors* (how many of the other floors avoided it; hidden if fewer than 2 other floors have checks), and *One thing to try*. With no tags, it shows a general tip for the weaker bin. Make a private card for a floor, open it, switch to Hindi, print it, copy its link, or share on WhatsApp. Cards are revoked automatically when data is corrected, so old numbers are never shared.
+- **Record a check** — choose location, date and round; tap a rating for each bin; optionally say whether collection kept them separate; optionally add a photo; tick “I personally checked these bins”. Save.
+- **Weekly plan** — one card per location: the action, the evidence behind it, and the **“vs last week”** line. A button records the next check for that location. A button downloads the weekly report.
+- **Scorecards** — the card uses the location's most frequent issue tag to show four short parts: *What went wrong* (and in how many checks), *Why it matters*, *Other locations* (how many of the other locations avoided it; hidden if fewer than 2 other locations have checks), and *One thing to try*. With no tags, it shows a general tip for the weaker bin. Make a private card for a location, open it, switch to Hindi, print it, copy its link, or share on WhatsApp. Cards are revoked automatically when data is corrected, so old numbers are never shared.
 - **Observation log** — every check; correct or delete; download a CSV (spreadsheet).
-- **Pilot setup** — add floors (only with permission), and create the **collection staff link**.
+- **Pilot setup** — add locations (only with permission), and create the **collection staff link**.
 - **How it works** — the scoring rules in plain words.
 - **Worker page** (`/w/<link>`) — the picture-only page for staff. See section 7.
 
@@ -135,13 +137,13 @@ Each bin rating becomes points:
 | Mixed | 0 |
 | Not seen | not counted at all |
 
-For each floor over seven days:
+For each location over seven days:
 
 1. Average the green-bin points. Average the blue-bin points.
-2. The floor score is the average of those two averages.
-3. The community score is the average of all floors that have a score.
+2. The location score is the average of those two averages.
+3. The community score is the average of all locations that have a score.
 
-**Worked example.** First floor, three checks this week:
+**Worked example.** First location, three checks this week:
 
 | Day | Green bin | Blue bin |
 |---|---|---|
@@ -149,7 +151,7 @@ For each floor over seven days:
 | Wed | A few wrong (50) | Clean (100) |
 | Fri | Clean (100) | Not seen |
 
-Green average = (100 + 50 + 100) ÷ 3 = 83.3. Blue average = (0 + 100) ÷ 2 = 50 (Friday not counted). Floor score = (83.3 + 50) ÷ 2 = **66.7**. Coverage = 5 bins seen out of 6 expected = **83%**.
+Green average = (100 + 50 + 100) ÷ 3 = 83.3. Blue average = (0 + 100) ÷ 2 = 50 (Friday not counted). Location score = (83.3 + 50) ÷ 2 = **66.7**. Coverage = 5 bins seen out of 6 expected = **83%**.
 
 **Rule to remember:** a bin we did not see never counts as clean.
 
@@ -157,9 +159,9 @@ Green average = (100 + 50 + 100) ÷ 3 = 83.3. Blue average = (0 + 100) ÷ 2 = 50
 
 ## 6. “Did last week's action work?” — the follow-up check
 
-Every floor card says whether the floor is **clearly better**, **clearly worse**, or shows **no clear change** compared with the previous seven days.
+Every location card says whether the location is **clearly better**, **clearly worse**, or shows **no clear change** compared with the previous seven days.
 
-**Why we can't just say “down 20 points”.** On our simulated data, with one check a day, a floor's weekly score jumps up and down by about **±30 points purely by chance**. If the app said “worse” every time the number dropped, it would mislead the warden most weeks.
+**Why we can't just say “down 20 points”.** On our simulated data, with one check a day, a location's weekly score jumps up and down by about **±30 points purely by chance**. If the app said “worse” every time the number dropped, it would mislead the pilot lead most weeks.
 
 **What the app does instead:**
 
@@ -167,7 +169,7 @@ Every floor card says whether the floor is **clearly better**, **clearly worse**
 2. It needs at least **3 such checks in each week**. Otherwise: “too few checks”.
 3. It works out the **noise band**: two standard errors of the difference between the two weeks' averages. Think of it as “how much the number usually moves even when nothing changed”.
 4. It only says clearly better or clearly worse when the change is **at least 5 points and bigger than the noise band**. Otherwise: “no clear change”.
-5. This is a **rule we chose for a small pilot**, not a statistical proof. Checks of the same floor on nearby days are not fully independent, so never call it “statistically significant”.
+5. This is a **rule we chose for a small pilot**, not a statistical proof. Checks of the same location on nearby days are not fully independent, so never call it “statistically significant”.
 
 **Example.** Run `python scripts/followup_evidence.py` and read `docs/FOLLOWUP_EVIDENCE.md`: each row shows the displayed score change, the both-bin change, and the noise band. When the both-bin change is smaller than the noise band, the app says **no clear change**, even if the score dropped by 20 points.
 
@@ -183,11 +185,11 @@ The code is in `app/actions.py` (`outcome()` and `check_values()`), and the test
 
 **Why it exists.** The person who sorts mixed waste by hand is the one who sees it most, but had no way to report it.
 
-**How the warden sets it up:** Pilot setup → *Collection staff link* → *Create worker link* → *Share on WhatsApp*. *New link* makes the old one stop working. *Turn off* disables it.
+**How the pilot lead sets it up:** Pilot setup → *Collection staff link* → *Create worker link* → *Share on WhatsApp*. *New link* makes the old one stop working. *Turn off* disables it.
 
 **What the worker sees** — no sign-in, no reading needed:
 
-1. Big buttons with the floor names. (The name is read aloud when tapped.)
+1. Big buttons with the location names. (The name is read aloud when tapped.)
 2. The **green bin** picture and three faces: 😊 साफ़ (clean), 😐 थोड़ा मिला (a few wrong), 😟 पूरा मिला हुआ (mixed).
 3. The **blue bin** picture and the same three faces.
 4. Optional picture tags for what was wrong: 🛍 plastic in the green bin, 🍛 food in the blue bin, 👜 all in one bag.
@@ -198,11 +200,11 @@ Every tap is spoken in Hindi by the phone's built-in voice. The 🔊 button read
 
 **Rules built in:**
 
-- Saved as that floor's **collection** check for today. A second report the same day replaces the first (the worker is correcting a mistake).
-- Workers see only floor names — no scores, notes, photos or other data.
+- Saved as that location's **collection** check for today. A second report the same day replaces the first (the worker is correcting a mistake).
+- Workers see only location names — no scores, notes, photos or other data.
 - At most 120 reports per hour per link.
 - The worker cannot pick a date or send extra fields.
-- If any report flags a dangerous item, that floor's weekly action becomes **“Make the bins safe to handle”** (shown first, marked *Worker safety*), and the weekly report has a **Dangerous items** column.
+- If any report flags a dangerous item, that location's weekly action becomes **“Make the bins safe to handle”** (shown first, marked *Worker safety*), and the weekly report has a **Dangerous items** column.
 
 **Not yet tested with real staff.** The Hindi wording was written by us and should be checked by a Hindi speaker.
 
@@ -312,7 +314,7 @@ The hackathon says: *“Your project has to use AWS, and your demo video has to 
 
 There are two accepted ways:
 
-- **Build It** — run AWS's open-source tools on your laptop. No AWS account. **We can do this today:** `sam build` packages our Lambda, and `sam local start-api` runs it in Docker exactly as AWS would. We have tested the full warden flow and the worker flow this way.
+- **Build It** — run AWS's open-source tools on your laptop. No AWS account. **We can do this today:** `sam build` packages our Lambda, and `sam local start-api` runs it in Docker exactly as AWS would. We have tested the full pilot lead flow and the worker flow this way.
 - **Ship It** — deploy to real AWS within the free tier and give a working public address. **This needs an AWS account**, and it is what the strongest rival projects have.
 
 What `template.yaml` creates when deployed:
@@ -321,7 +323,7 @@ What `template.yaml` creates when deployed:
 |---|---|
 | API Gateway | Gives the app its public web address |
 | Lambda | Runs `app/` when someone opens a page or saves a check |
-| DynamoDB | Stores floors, checks, cards, worker links |
+| DynamoDB | Stores locations, checks, cards, worker links |
 | S3 | Stores bin photos privately |
 | EventBridge | Makes the weekly scorecards automatically |
 | CloudWatch | Keeps logs so we can show requests happening |
@@ -355,11 +357,11 @@ What `template.yaml` creates when deployed:
 
 The detailed script is in [DEMO_SCRIPT.md](DEMO_SCRIPT.md). The story in one line:
 
-> “The person who sorts our mixed waste by hand can now report it without reading — and the warden finally learns whether the fix worked.”
+> “The person who sorts our mixed waste by hand can now report it without reading — and the pilot lead finally learns whether the fix worked.”
 
 1. **0:00–0:20** — the bins and the problem.
 2. **0:20–0:55** — a housekeeping worker (with permission) using the picture page; let the Hindi voice be heard.
-3. **0:55–1:50** — the warden's dashboard, a scorecard in Hindi.
+3. **0:55–1:50** — the pilot lead's dashboard, a scorecard in Hindi.
 4. **1:50–2:15** — the weekly plan: a worker-safety card, a “no clear change” card, and why we refuse to over-claim.
 5. **2:15–2:40** — AWS: the real console if deployed; otherwise `sam build` and `sam local` with the Lambda in Docker, said honestly as a local run.
 6. **2:40–3:00** — what we measured, and the limits.
@@ -372,7 +374,7 @@ Keep the **DEMO** label visible whenever demo data is on screen.
 
 **Done and tested:**
 
-- Warden app: floors, checks, scores, coverage, trends, scorecards (English/Hindi), weekly plan, report, CSV, corrections.
+- Pilot lead app: locations, checks, scores, coverage, trends, scorecards (English/Hindi), weekly plan, report, CSV, corrections.
 - Follow-up check with the noise band.
 - Worker page with Hindi voice and danger button; worker-safety action.
 - Security: sign-in, private links, rate limits, no student names.
@@ -386,7 +388,7 @@ Keep the **DEMO** label visible whenever demo data is on screen.
 | Written ruling from organisers on the start time | Team lead |
 | AWS account so we can deploy a live address | Whoever owns the account |
 | Talk to 1–2 housekeeping staff, with permission; test the worker page; film it | Anyone on the team |
-| Real checks on 2–3 floors with the warden's permission | Anyone on the team |
+| Real checks on 2–3 locations with the pilot lead's permission | Anyone on the team |
 | Check the Hindi wording | A Hindi speaker |
 | Record and edit the video | Team |
 | Make the repo public and submit the form | Team lead, after the ruling |
@@ -399,7 +401,7 @@ Keep the **DEMO** label visible whenever demo data is on screen.
 A: No. It closes the loop: record → action → check whether the action worked next week, and it gives sanitation staff a way to report without reading.
 
 **Q: Why not use AI to rate bins from photos?**
-A: We built it as an option with AWS Bedrock, but a person always makes the final rating. A wrong automatic rating would blame the wrong floor. We would turn it on only after testing it on labelled real photos.
+A: We built it as an option with AWS Bedrock, but a person always makes the final rating. A wrong automatic rating would blame the wrong location. We would turn it on only after testing it on labelled real photos.
 
 **Q: How do you know the score really changed?**
 A: We compare only checks where both bins were seen, and call a change clear only when it is at least 5 points and bigger than two standard errors of the difference between weeks. With one check a day, the weekly number often moves by about 30 points with no real change, so most single weeks show “no clear change”. We say openly that this is a pilot rule, not a statistical proof.
@@ -408,10 +410,10 @@ A: We compare only checks where both bins were seen, and call a change clear onl
 A: Research on feedback (for example UNDP's trial in Bhutan, as reported) points to specific feedback — what exactly went wrong and why — working better than generic tips. Three picture tags make that possible without reading, and the card text is a fixed, reviewed template, so nothing is invented.
 
 **Q: Why should a worker use this?**
-A: It takes four taps, needs no reading, speaks Hindi, and the danger button turns their safety problem into the warden's top action. We have not tested it with real staff yet — that is our next step.
+A: It takes four taps, needs no reading, speaks Hindi, and the danger button turns their safety problem into the pilot lead's top action. We have not tested it with real staff yet — that is our next step.
 
 **Q: What about privacy?**
-A: No student names. Floor labels only. Scorecard and worker links are random and can be revoked. Reports exclude notes and photos.
+A: No student names. Location labels only. Scorecard and worker links are random and can be revoked. Reports exclude notes and photos.
 
 **Q: Where exactly is AWS used?**
 A: Lambda runs the server, API Gateway gives the address, DynamoDB stores data, S3 stores photos, EventBridge runs the weekly job, CloudWatch keeps logs, and Bedrock is optional. It is deployed on AWS at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com; health shows DynamoDB storage. Bedrock is built but switched off.

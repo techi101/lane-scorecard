@@ -36,3 +36,5 @@ main{max-width:560px;margin:0 auto;padding:16px 16px 40px}
 button:focus-visible{outline:4px solid var(--amber);outline-offset:3px}
 .deep{border-color:var(--green);margin:14px 0 6px}
 .deep[aria-pressed=true]{background:var(--green)}
+.area{font-size:16px;font-weight:700;color:var(--muted);margin:14px 2px 8px;text-transform:uppercase;letter-spacing:.04em}
+.area:first-of-type{margin-top:4px}

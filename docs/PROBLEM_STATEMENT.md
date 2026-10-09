@@ -6,29 +6,29 @@ The official event provides open environmental tracks. It asks teams to choose a
 
 ## Our problem statement
 
-How can hostel staff and student volunteers identify where two-bin waste segregation breaks down, give each floor useful feedback, and track changes over time without collecting resident identities?
+How can campus staff and student volunteers identify where two-bin waste segregation breaks down, give each location useful feedback, and track changes over time without collecting resident identities?
 
 ## Who uses it
 
-- A permitted hostel operator or volunteer records visible bin conditions.
-- Residents receive a private, floor-level scorecard with one practical action.
-- A warden or collection coordinator reviews weekly aggregate reports and collection problems.
+- A permitted campus operator or volunteer records visible bin conditions.
+- Residents receive a private, location-level scorecard with one practical action.
+- A pilot lead or collection coordinator reviews weekly aggregate reports and collection problems.
 
 ## The complete workflow
 
 1. Sign in and select the real pilot workspace.
-2. Add floors after obtaining permission.
+2. Add locations after obtaining permission.
 3. Record the date, round, both bin ratings and whether collection stayed separate. Attach permitted photos if useful.
 4. Review the weekly dashboard and coverage. Missing observations remain missing.
-5. Open the weekly plan for one evidence-based action per floor.
-6. Generate a private English/Hindi floor scorecard or download a weekly operator report.
+5. Open the weekly plan for one evidence-based action per location.
+6. Generate a private English/Hindi location scorecard or download a weekly operator report.
 7. Repeat the check and compare weeks. Correct errors in the observation log; old cards are revoked on corrections.
 
 ## Requirements mapped to working features
 
 | Need | Implementation | Evidence |
 |---|---|---|
-| Find segregation problems | Separate bio/non-bio ratings and seven-day floor scores | Backend scoring and browser checks |
+| Find segregation problems | Separate bio/non-bio ratings and seven-day location scores | Backend scoring and browser checks |
 | Distinguish uncertainty | Not-seen rating and explicit observation coverage | Missing-data and boundary tests |
 | Identify downstream mixing | Collection observation and follow-up action | Weekly action tests |
 | Give useful feedback | Private bilingual scorecards and weekly action plan | Browser flow and action tests |
@@ -41,7 +41,7 @@ How can hostel staff and student volunteers identify where two-bin waste segrega
 
 ## Success measures for a real pilot
 
-Measure both-bins-clean rate, per-bin scores, observed-bin coverage, participating floors and reported collection separation. Record the count and observation window beside each percentage. Obtain permission and collect a baseline before distributing feedback, then repeat a comparable observation routine. A change in this small pilot is an early signal, not proof of causation, waste diversion or carbon savings.
+Measure both-bins-clean rate, per-bin scores, observed-bin coverage, participating locations and reported collection separation. Record the count and observation window beside each percentage. Obtain permission and collect a baseline before distributing feedback, then repeat a comparable observation routine. A change in this small pilot is an early signal, not proof of causation, waste diversion or carbon savings.
 
 The application does not weigh waste, identify residents, certify legal compliance, or automatically send messages. Demo records are simulated; the real pilot starts empty.
 
