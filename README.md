@@ -4,7 +4,7 @@ A working, local-first hostel waste-feedback app: record two-bin checks, compare
 
 **Problem:** help hostel staff identify where two-bin waste segregation breaks down, give residents useful feedback, and track changes without collecting resident identities. It fits Environmental Hacks' **Waste and Energy** track. This is our chosen problem statement within the event's open tracks. The build began before the event opened; theme fit does not establish entry eligibility. See [problem statement and requirement mapping](docs/PROBLEM_STATEMENT.md).
 
-**New to the project? Read the [team guide](docs/TEAM_GUIDE.md) first.** It explains everything in plain words, with no AI tools needed.
+**New to the project? Read the [team guide](docs/TEAM_GUIDE.md) first.** It explains everything in plain words, with no AI tools needed. To test it, follow [docs/TESTING.md](docs/TESTING.md).
 
 Start with the [complete project guide](docs/PROJECT_GUIDE.md), [AWS deployment guide](docs/AWS.md), or [project writeup](docs/PROJECT_WRITEUP.md).
 
