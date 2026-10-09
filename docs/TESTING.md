@@ -58,6 +58,9 @@ Use your own name in the label so testers don't collide with each other.
 ### Step 9 — observation log and CSV
 **Observation log** ✅ shows your checks, including the worker's *collection* round. **Download CSV** → open in Excel ✅ columns include `hazard`, `reporter` (`worker`) and `issues`.
 
+### Step 9b — Photos
+Record a check in your test location with a photo for one bin (any bin photo with no people). Open **Photos**. ✅ The photo shows with your location, the date, the round and the bin. Press **Delete photo** → **Cancel** ✅ it stays; press it again → confirm ✅ “Photo deleted” and it disappears, while the check is still in the Observation log with the same ratings.
+
 ### Step 10 — My Bin Guide
 Open `<live site>/guide`. ✅ The page loads and says AI is **not available** (correct — AI is switched off).
 

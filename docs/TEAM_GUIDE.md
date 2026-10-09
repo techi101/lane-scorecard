@@ -120,6 +120,7 @@ Open the app, sign in with the operator access code, then:
 - **Weekly plan** — one card per location: the action, the evidence behind it, and the **“vs last week”** line. A button records the next check for that location. A button downloads the weekly report.
 - **Scorecards** — the card uses the location's most frequent issue tag to show four short parts: *What went wrong* (and in how many checks), *Why it matters*, *Other locations* (how many of the other locations avoided it; hidden if fewer than 2 other locations have checks), and *One thing to try*. With no tags, it shows a general tip for the weaker bin. Make a private card for a location, open it, switch to Hindi, print it, copy its link, or share on WhatsApp. Cards are revoked automatically when data is corrected, so old numbers are never shared.
 - **Observation log** — every check; correct or delete; download a CSV (spreadsheet).
+- **Photos** — every uploaded bin photo with its location, date, round and bin. If a photo is wrong (wrong bin, a person in it, too dark), press **Delete photo**; the check and its ratings stay as they are.
 - **Pilot setup** — add locations (only with permission), and create the **collection staff link**.
 - **How it works** — the scoring rules in plain words.
 - **Worker page** (`/w/<link>`) — the picture-only page for staff. See section 7.

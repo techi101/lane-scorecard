@@ -454,6 +454,30 @@ def create_app(directory=None):
         photo_delete(workspace, photo_id)
         return {"ok": True}
 
+    @app.get("/api/{workspace}/photos")
+    def list_photos(workspace: Workspace, _=Depends(authenticated)):
+        """Every photo in the workspace with the check it belongs to, newest first."""
+        names = {f["id"]: (f["name"], f.get("area", "")) for f in store.list(f"{workspace}:floors")}
+        owner = {pid: c for c in store.list(f"{workspace}:checks") for pid in c["photos"]}
+        rows = []
+        for p in store.list(f"{workspace}:photos"):
+            c = owner.get(p["id"])
+            name, area = names.get(c["floor_id"], ("Deleted location", "")) if c else ("", "")
+            rows.append({"id": p["id"], "stream": p["stream"], "created_at": p["created_at"],
+                         "check": {"id": c["id"], "date": c["date"], "round": c["round"], "location": name, "area": area} if c else None})
+        return sorted(rows, key=lambda r: r["created_at"], reverse=True)
+
+    @app.delete("/api/{workspace}/checks/{check_id}/photos/{photo_id}")
+    def delete_check_photo(workspace: Workspace, check_id: str, photo_id: str, _=Depends(authenticated)):
+        """Remove a wrong photo from a check. The check and its ratings stay as they are."""
+        check = store.get(f"{workspace}:checks", check_id)
+        if not check or photo_id not in check["photos"]:
+            raise HTTPException(404, "That photo is not attached to this check.")
+        store.put(f"{workspace}:checks", check_id, {**check, "photos": [p for p in check["photos"] if p != photo_id], "updated_at": now()})
+        photo_delete(workspace, photo_id)
+        audit(workspace, "photo_deleted", check_id)
+        return {"ok": True}
+
     @app.post("/api/{workspace}/cards/{floor_id}")
     def generate_card(workspace: Workspace, floor_id: str, payload: CardRequest, _=Depends(authenticated)):
         if payload.end > today():
