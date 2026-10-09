@@ -64,3 +64,19 @@ def test_demo_is_a_campus_and_old_hostel_demo_is_replaced(tmp_path):
 def test_location_order_puts_unassigned_last():
     rows = [{'name': 'b'}, {'name': 'a', 'area': 'Sports'}, {'name': 'c', 'area': 'Admin'}]
     assert [r['name'] for r in sorted(rows, key=location_order)] == ['c', 'a', 'b']
+
+
+def test_rename_keeps_checks_and_photos(client):
+    fid = add(client, 'Spot 05 · near lit building')
+    record(client, fid)
+    r = client.put(f'/api/pilot/floors/{fid}', json={'name': 'Aryabhatta block · front', 'area': 'Academic blocks', 'permission': True})
+    assert r.status_code == 200 and r.json()['name'] == 'Aryabhatta block · front'
+    action = next(a for a in client.get('/api/pilot/dashboard').json()['actions'] if a['floor_id'] == fid)
+    assert action['name'] == 'Aryabhatta block · front' and action['area'] == 'Academic blocks' and action['checks'] == 1
+
+
+def test_rename_refuses_duplicates_and_unknown(client):
+    a, b = add(client, 'A'), add(client, 'B')
+    assert client.put(f'/api/pilot/floors/{b}', json={'name': 'a', 'area': '', 'permission': True}).status_code == 409
+    assert client.put('/api/pilot/floors/nope', json={'name': 'C', 'area': '', 'permission': True}).status_code == 404
+    assert client.put(f'/api/pilot/floors/{a}', json={'name': 'A', 'area': 'Library', 'permission': True}).status_code == 200  # same name, new area

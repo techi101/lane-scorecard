@@ -320,6 +320,22 @@ def create_app(directory=None):
         audit(workspace, "floor_added", value["id"])
         return value
 
+    @app.put("/api/{workspace}/floors/{floor_id}")
+    def rename_floor(workspace: Workspace, floor_id: str, payload: Floor, _=Depends(authenticated)):
+        """Change a location's name or area. Its checks and photos stay attached."""
+        current = store.get(f"{workspace}:floors", floor_id)
+        if not current:
+            raise HTTPException(404, "Location not found.")
+        if not payload.permission:
+            raise HTTPException(422, "Confirm permission for this location.")
+        if any(f["id"] != floor_id and f["name"].casefold() == payload.name.casefold() for f in store.list(f"{workspace}:floors")):
+            raise HTTPException(409, "A location with this name already exists.")
+        value = {**current, "name": payload.name, "area": payload.area, "updated_at": now()}
+        store.put(f"{workspace}:floors", floor_id, value)
+        invalidate_cards(workspace)  # cards show the old name
+        audit(workspace, "floor_renamed", floor_id)
+        return value
+
     @app.delete("/api/{workspace}/floors/{floor_id}")
     def delete_floor(workspace: Workspace, floor_id: str, _=Depends(authenticated)):
         if not store.get(f"{workspace}:floors", floor_id):
