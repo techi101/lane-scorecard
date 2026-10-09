@@ -20,7 +20,7 @@ const ISSUES = [
   {key: 'one_bag', pic: '👜', hi: 'सब एक ही थैली में', en: 'All in one bag'},
   {key: 'hidden_below', pic: '🔍', hi: 'नीचे छिपा ग़लत कचरा', en: 'Wrong items hidden underneath'},
 ];
-const HELP = 'पहले मंज़िल चुनें। फिर हरे और नीले डिब्बे को देखकर चेहरा दबाएँ। कुछ ग़लत दिखे तो उसकी तस्वीर दबाएँ। काँच, ब्लेड, सुई या खुला पैड मिले तो लाल बटन दबाएँ। आख़िर में हरा बटन, भेजें, दबाएँ।';
+const HELP = 'पहले जगह चुनें। फिर हरे और नीले डिब्बे को देखकर चेहरा दबाएँ। कुछ ग़लत दिखे तो उसकी तस्वीर दबाएँ। काँच, ब्लेड, सुई या खुला पैड मिले तो लाल बटन दबाएँ। आख़िर में हरा बटन, भेजें, दबाएँ।';
 
 function speak(text) {
   try {
@@ -48,12 +48,12 @@ function rateBlock(stream, n) {
 
 function render() {
   if (!s.floors.length) {
-    app.innerHTML = `<div class="done"><div class="big">🏢</div><p>अभी कोई मंज़िल नहीं जोड़ी गई।<span class="en">No floors yet. Ask the warden to add floors.</span></p></div>`;
+    app.innerHTML = `<div class="done"><div class="big">🏢</div><p>अभी कोई जगह नहीं जोड़ी गई।<span class="en">No places yet. Ask the warden to add them.</span></p></div>`;
     return;
   }
   const ready = s.floor && s.bio && s.nonbio && !s.sending;
   app.innerHTML = `<div class="top"><h1>कूड़ेदान रिपोर्ट <span class="en">Bin report</span></h1>${s.demo ? '<span class="demo">DEMO</span>' : ''}<button class="speak" data-action="help" aria-label="सुनें / Listen">🔊</button></div>
-    <div class="step"><b>1</b>मंज़िल चुनें <span class="en">Choose the floor</span></div>
+    <div class="step"><b>1</b>जगह चुनें <span class="en">Choose the place</span></div>
     <div class="grid">${s.floors.map(f => `<button class="tile" data-floor="${esc(f.id)}" aria-pressed="${s.floor === f.id}">${esc(f.name)}</button>`).join('')}</div>
     ${rateBlock('bio', 2)}${rateBlock('nonbio', 3)}
     <div class="step"><b>4</b>क्या ग़लत था? <span class="en">What was wrong? (optional)</span></div>

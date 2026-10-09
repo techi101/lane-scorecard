@@ -64,7 +64,7 @@ def weekly_actions(summary, checks, previous=None):
                       "hi": "निवासियों से कहें कि टूटा काँच और ब्लेड कागज़ में लपेटकर उस पर निशान लगाएँ, और सैनिटरी कचरा अलग लपेटें। सफ़ाई कर्मचारियों के पास दस्ताने हों।"}
         elif not floor["checks"]:
             kind, title = "observe", "Make the first check"
-            evidence = "No checks were recorded for this floor in the selected week."
+            evidence = "No checks were recorded for this location in the selected week."
             action = {"en": "Visit both bins with permission and record their visible condition.",
                       "hi": "अनुमति लेकर दोनों कूड़ेदान देखें और उनकी दिखाई देने वाली स्थिति दर्ज करें।"}
         elif mixed_collection:
@@ -91,8 +91,8 @@ def weekly_actions(summary, checks, previous=None):
         else:
             kind, title = "maintain", "Keep checking consistently"
             evidence = f"Every rated bin was clean in all {floor['checks']} recorded check(s)."
-            action = {"en": "Keep the same checking routine and share the floor's feedback. Confirm separation during collection when possible.",
-                      "hi": "नियमित निरीक्षण जारी रखें और फ़्लोर का फ़ीडबैक साझा करें। संभव हो तो देखें कि उठाते समय कचरा अलग रहता है।"}
+            action = {"en": "Keep the same checking routine and share the location's feedback. Confirm separation during collection when possible.",
+                      "hi": "नियमित निरीक्षण जारी रखें और जगह का फ़ीडबैक साझा करें। संभव हो तो देखें कि उठाते समय कचरा अलग रहता है।"}
         actions.append({"floor_id": floor["id"], "name": floor["name"], "kind": kind,
                         "title": title, "evidence": evidence, "action": action,
                         "checks": floor["checks"], "coverage": floor["coverage"], "score": floor["score"],

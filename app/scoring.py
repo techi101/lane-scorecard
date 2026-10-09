@@ -69,8 +69,8 @@ ISSUES = {
                  "hi": "सारा कचरा एक ही थैली में डाल दिया गया।"},
         "why": {"en": "Nothing in a mixed bag can be composted or recycled until someone sorts it by hand.",
                 "hi": "मिली हुई थैली का कुछ भी तब तक खाद या रीसाइक्लिंग में नहीं जा सकता जब तक कोई उसे हाथ से न छाँटे।"},
-        "fix": {"en": "Keep two small bags or boxes in your room: one for food, one for dry waste.",
-                "hi": "कमरे में दो छोटी थैलियाँ या डिब्बे रखें: एक खाने के लिए, एक सूखे कचरे के लिए।"},
+        "fix": {"en": "Don't drop the whole bag in one bin. At the bin, tip the food into the green bin first, then put the bag and other dry items in the blue bin.",
+                "hi": "पूरी थैली एक ही डिब्बे में न डालें। डिब्बे के पास पहले खाना हरे डिब्बे में डालें, फिर थैली और बाक़ी सूखा कचरा नीले डिब्बे में।"},
     },
 }
 

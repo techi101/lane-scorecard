@@ -48,8 +48,8 @@ try:
         page.screenshot(path=str(ARTIFACTS / 'desktop-overview.png'), full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         page.locator('#workspace').select_option('pilot')
-        expect(page.get_by_role('heading', name='Your first floor starts the story.')).to_be_visible()
-        page.get_by_role('button', name='Add a floor', exact=True).click()
+        expect(page.get_by_role('heading', name='Your first bin location starts the story.')).to_be_visible()
+        page.get_by_role('button', name='Add a location', exact=True).click()
         page.locator('#floor-form input[name=name]').fill('Browser test floor')
         page.locator('#floor-form input[name=permission]').check()
         page.locator('#floor-form button[type=submit]').click()
@@ -71,7 +71,7 @@ try:
         expect(page.get_by_role('heading', name='Small checks. Real change.')).to_be_visible()
         expect(page.locator('.stats .stat').first).to_contain_text('75')
         page.locator('[data-nav=plan]').click()
-        expect(page.get_by_role('heading', name='A useful next step for every floor.')).to_be_visible()
+        expect(page.get_by_role('heading', name='A useful next step for every bin location.')).to_be_visible()
         expect(page.locator('.plan-card')).to_contain_text('Improve separation at the bin')
         expect(page.locator('.plan-card')).to_contain_text('75 /100')
         with page.expect_download() as download_info:
@@ -118,7 +118,7 @@ try:
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'Mobile form overflows'
         page.locator('[data-action=menu]').click()
         page.locator('.sidebar [data-nav=plan]').click()
-        expect(page.get_by_role('heading', name='A useful next step for every floor.')).to_be_visible()
+        expect(page.get_by_role('heading', name='A useful next step for every bin location.')).to_be_visible()
         page.screenshot(path=str(ARTIFACTS / 'mobile-weekly-plan.png'), full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'Mobile plan overflows'
         browser.close()
