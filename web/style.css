@@ -77,3 +77,4 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .login-card h2{font-weight:650}
 .action-panel h2{font-size:18px;line-height:1.35}
 @media (max-width:760px){h1{font-size:22px!important;letter-spacing:-.2px}.page-head{flex-wrap:wrap;align-items:flex-start}}
+.log-thumbs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.log-thumbs a{display:flex;flex-direction:column;gap:3px;text-decoration:none;font-size:11px;color:var(--muted)}.log-thumbs img{width:88px;height:66px;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:#eef3e7}.log-thumbs a:hover img{outline:2px solid var(--green)}
