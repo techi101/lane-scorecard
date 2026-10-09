@@ -17,7 +17,7 @@ def test_photo_list_shows_location_date_round_and_bin(client):
     loose = upload(client)
     rows = {r['id']: r for r in client.get('/api/pilot/photos').json()}
     assert rows[pid]['stream'] == 'nonbio'
-    assert rows[pid]['check'] == {'id': check['id'], 'date': check['date'], 'round': 'morning', 'location': 'Library · entrance', 'area': 'Library'}
+    assert rows[pid]['check'] == {'id': check['id'], 'floor_id': fid, 'date': check['date'], 'round': 'morning', 'location': 'Library · entrance', 'area': 'Library'}
     assert rows[loose]['check'] is None
 
 

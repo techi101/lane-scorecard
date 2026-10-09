@@ -480,7 +480,7 @@ def create_app(directory=None):
             c = owner.get(p["id"])
             name, area = names.get(c["floor_id"], ("Deleted location", "")) if c else ("", "")
             rows.append({"id": p["id"], "stream": p["stream"], "created_at": p["created_at"],
-                         "check": {"id": c["id"], "date": c["date"], "round": c["round"], "location": name, "area": area} if c else None})
+                         "check": {"id": c["id"], "floor_id": c["floor_id"], "date": c["date"], "round": c["round"], "location": name, "area": area} if c else None})
         return sorted(rows, key=lambda r: r["created_at"], reverse=True)
 
     @app.delete("/api/{workspace}/checks/{check_id}/photos/{photo_id}")
