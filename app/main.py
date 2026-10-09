@@ -17,16 +17,19 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .scoring import STREAMS, card_data, summarize, today
+from .scoring import STREAMS, card_data, community_goal, deep_check_plan, summarize, today
+from .guide import build as build_guide, items_from_text, read_receipt
 from .storage import Store
 from .vision import sanitize, suggest
 from .actions import weekly_actions
 from .report import render_report
+from .followups import register_routes as register_followups
 
 ROOT = Path(__file__).resolve().parent.parent
 Workspace = Literal["demo", "pilot"]
 Rating = Literal["clean", "few", "mixed", "unseen"]
-Issue = Literal["plastic_in_wet", "food_in_dry", "one_bag"]  # keys of scoring.ISSUES
+Issue = Literal["plastic_in_wet", "food_in_dry", "hidden_below", "one_bag"]  # keys of scoring.ISSUES
+SeenRating = Literal["clean", "few", "mixed"]
 
 
 def digest(value):
@@ -57,6 +60,11 @@ class Check(StrictModel):
     round: Literal["morning", "evening", "collection"]
     bio: Rating
     nonbio: Rating
+    # Optional SWM 2026 streams. None = no such bin here / not part of this check.
+    sanitary: Rating | None = None
+    special: Rating | None = None
+    # Deep check: the checker looked below the top layer, not just at the surface.
+    deep: bool = False
     kept_separate: bool | None = None
     hazard: bool | None = None
     issues: list[Issue] = Field(default_factory=list, max_length=3)
@@ -85,6 +93,12 @@ class Photo(StrictModel):
     permission: Literal[True]
 
 
+class GuideRequest(StrictModel):
+    """A receipt as pasted text and/or a photo. Never stored."""
+    text: str = Field(default="", max_length=6000)
+    image: str = Field(default="", max_length=2_800_000)
+
+
 class CardRequest(StrictModel):
     end: date
 
@@ -94,6 +108,9 @@ class WorkerReport(StrictModel):
     floor_id: str = Field(min_length=1, max_length=80)
     bio: Literal["clean", "few", "mixed"]
     nonbio: Literal["clean", "few", "mixed"]
+    sanitary: SeenRating | None = None
+    special: SeenRating | None = None
+    deep: bool = False
     hazard: bool = False
     issues: list[Issue] = Field(default_factory=list, max_length=3)
 
@@ -290,6 +307,7 @@ def create_app(directory=None):
                 for pid in check["photos"]:
                     photo_delete(workspace, pid)
                 store.delete(f"{workspace}:checks", check["id"])
+        store.delete(f"{workspace}:followups", floor_id)
         store.delete(f"{workspace}:floors", floor_id)
         invalidate_cards(workspace)
         audit(workspace, "floor_deleted", floor_id)
@@ -317,6 +335,7 @@ def create_app(directory=None):
             if existing["id"] != cid and set(existing["photos"]) & set(payload.photos):
                 raise HTTPException(409, "This photo is already attached to another check.")
         value = {**payload.model_dump(mode="json"), "id": cid, "created_at": previous["created_at"] if previous else now(), "updated_at": now(), "source": "simulated" if workspace == "demo" else "real pilot"}
+        value["evidence_version"] = str(uuid4())
         if previous and previous.get("reporter"):
             # An operator correction keeps who reported it and any hazard flag the form does not show.
             value["reporter"] = previous["reporter"]
@@ -374,6 +393,8 @@ def create_app(directory=None):
         return {**report, "workspace": workspace, "previous": previous, "trend": trend,
                 "recent": sorted(selected, key=lambda c: (c["date"], c["round"]), reverse=True),
                 "evaluation": evaluation, "actions": weekly_actions(report, check_rows, previous),
+                "deep_plan": deep_check_plan(floor_rows, check_rows, end, admin_code),
+                "goal": community_goal(floor_rows, check_rows, end),
                 "ai_configured": os.getenv("LANE_ENABLE_AI") == "1"}
 
     @app.post("/api/{workspace}/photos", status_code=201)
@@ -496,17 +517,41 @@ def create_app(directory=None):
         cid = f"{day}:{payload.floor_id}:collection"
         previous = store.get(f"{workspace}:checks", cid)
         value = {"id": cid, "floor_id": payload.floor_id, "date": day, "round": "collection",
-                 "bio": payload.bio, "nonbio": payload.nonbio, "kept_separate": None, "hazard": payload.hazard,
+                 "bio": payload.bio, "nonbio": payload.nonbio, "sanitary": payload.sanitary, "special": payload.special,
+                 "deep": payload.deep, "kept_separate": None, "hazard": payload.hazard,
                  "issues": payload.issues,
                  "note": "", "photos": [], "human_confirmed": True, "reporter": "worker",
                  "created_at": previous["created_at"] if previous else now(), "updated_at": now(),
                  "source": "simulated" if workspace == "demo" else "real pilot"}
         # A second tap the same day replaces the first: the worker is correcting a mistake.
+        value["evidence_version"] = str(uuid4())
         store.put(f"{workspace}:checks", cid, value)
         if previous:
             invalidate_cards(workspace)
         audit(workspace, "worker_report_corrected" if previous else "worker_report", cid)
         return {"ok": True, "replaced": bool(previous)}
+
+    # My Bin Guide: public and stateless. The receipt teaches the household; it is never stored or scored.
+    @app.post("/api/guide")
+    def guide(payload: GuideRequest, request: Request):
+        ip = request.client.host if request.client else "unknown"
+        recent = attempts["guide:" + ip]
+        while recent and recent[0] < time.monotonic() - 3600:
+            recent.popleft()
+        if len(recent) >= 30:
+            raise HTTPException(429, "Too many receipts from here. Try again in an hour.")
+        if not payload.text.strip() and not payload.image:
+            raise HTTPException(422, "Paste the receipt text or add a receipt photo.")
+        recent.append(time.monotonic())
+        names, ai_parts, ai = items_from_text(payload.text), {}, "not_used"
+        if payload.image:
+            try:
+                raw = sanitize(base64.b64decode(payload.image, validate=True))
+            except (ValueError, TypeError) as exc:
+                raise HTTPException(422, str(exc)) from exc
+            ai, read, ai_parts = read_receipt(raw)
+            names += [n for n in read if n.lower() not in {x.lower() for x in names}]
+        return {**build_guide(names[:40], ai_parts), "ai": ai}
 
     @app.get("/api/{workspace}/export.csv")
     def export(workspace: Workspace, end: date | None = None, _=Depends(authenticated)):
@@ -515,13 +560,13 @@ def create_app(directory=None):
         floors = {f["id"]: f["name"] for f in store.list(f"{workspace}:floors")}
         output = io.StringIO(newline="")
         writer = csv.writer(output)
-        writer.writerow(["source", "floor", "date", "round", "bio", "nonbio", "kept_separate", "note", "created_at", "hazard", "reporter", "issues"])
+        writer.writerow(["source", "floor", "date", "round", "bio", "nonbio", "kept_separate", "note", "created_at", "hazard", "reporter", "issues", "sanitary", "special", "deep_check"])
         def safe(value):
             text = str(value)
             return "'" + text if text.lstrip().startswith(("=", "+", "-", "@", "\t", "\r")) else text
         for check in store.list(f"{workspace}:checks"):
             if start.isoformat() <= check["date"] <= end.isoformat():
-                values = [check["source"], floors.get(check["floor_id"], "Deleted floor"), check["date"], check["round"], check["bio"], check["nonbio"], {True: "yes", False: "no", None: "not observed"}[check["kept_separate"]], check["note"], check["created_at"], {True: "yes", False: "no", None: "not asked"}[check.get("hazard")], check.get("reporter", "operator"), ";".join(check.get("issues", []))]
+                values = [check["source"], floors.get(check["floor_id"], "Deleted floor"), check["date"], check["round"], check["bio"], check["nonbio"], {True: "yes", False: "no", None: "not observed"}[check["kept_separate"]], check["note"], check["created_at"], {True: "yes", False: "no", None: "not asked"}[check.get("hazard")], check.get("reporter", "operator"), ";".join(check.get("issues", [])), check.get("sanitary") or "no bin", check.get("special") or "no bin", "yes" if check.get("deep") else "no"]
                 writer.writerow([safe(v) for v in values])
         return Response("\ufeff" + output.getvalue(), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="lane-{workspace}-{end.isoformat()}.csv"'})
 
@@ -532,12 +577,14 @@ def create_app(directory=None):
         checks = store.list(f"{workspace}:checks")
         summary = summarize(floors, checks, end)
         previous = summarize(floors, checks, end - timedelta(days=7))
-        content = render_report(summary, weekly_actions(summary, checks, previous), workspace, lang)
+        content = render_report(summary, weekly_actions(summary, checks, previous), workspace, lang, community_goal(floors, checks, end))
         return HTMLResponse(content, headers={"Content-Disposition": f'attachment; filename="lane-{workspace}-{end.isoformat()}-report.html"'})
 
     @app.get("/api/{workspace}/audit")
     def audit_log(workspace: Workspace, _=Depends(authenticated)):
         return sorted(store.list(f"{workspace}:audit"), key=lambda x: x["at"], reverse=True)[:100]
+
+    register_followups(app, store, authenticated, audit)
 
     app.mount("/assets", StaticFiles(directory=ROOT / "web"), name="assets")
 
@@ -545,6 +592,10 @@ def create_app(directory=None):
     @app.get("/card/{token}")
     def index():
         return FileResponse(ROOT / "web" / "index.html")
+
+    @app.get("/guide")
+    def guide_page():
+        return FileResponse(ROOT / "web" / "guide.html")
 
     @app.get("/w/{token}")
     def worker_page(token: str):

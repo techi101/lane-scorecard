@@ -1,10 +1,19 @@
 """Transparent scoring. Missing observations never count as clean bins."""
+import hashlib
 from datetime import date, datetime, timedelta, timezone
+from math import ceil
 from statistics import mean, median
 
 IST = timezone(timedelta(hours=5, minutes=30))
 RATINGS = {"clean": 100, "few": 50, "mixed": 0, "unseen": None}
+# The two bins every check rates. "Both bins clean" and the week-over-week outcome use only these,
+# so every compared value measures the same thing.
 STREAMS = ("bio", "nonbio")
+# SWM Rules 2026 add sanitary and special-care streams. Rating them is optional: None means the
+# site has no such bin or it was not part of this check (not expected), "unseen" means expected but not seen.
+EXTRA_STREAMS = ("sanitary", "special")
+ALL_STREAMS = STREAMS + EXTRA_STREAMS
+STREAM_LABELS = {"bio": "green (wet)", "nonbio": "blue (dry)", "sanitary": "sanitary", "special": "special-care"}
 TIPS = {
     "bio": {
         "en": "Keep food scraps in the bio bin. Remove plastic bags and wrappers before putting food waste in it.",
@@ -13,6 +22,14 @@ TIPS = {
     "nonbio": {
         "en": "Empty leftover food into the bio bin. Keep dry packaging in the non-bio bin, following your collector’s instructions.",
         "hi": "बचा हुआ खाना जैविक कूड़ेदान में डालें। सूखी पैकिंग गैर-जैविक कूड़ेदान में रखें और कचरा लेने वाले के निर्देश मानें।",
+    },
+    "sanitary": {
+        "en": "Wrap used pads and diapers in paper or their pouch and keep them in the separate sanitary bin, never with food or dry waste.",
+        "hi": "इस्तेमाल किए पैड और डायपर काग़ज़ या उनकी थैली में लपेटकर अलग सैनिटरी डिब्बे में रखें, खाने या सूखे कचरे के साथ नहीं।",
+    },
+    "special": {
+        "en": "Keep batteries, bulbs, tube lights, expired medicines and needles in a separate box for the collector, never in the other bins.",
+        "hi": "बैटरी, बल्ब, ट्यूबलाइट, एक्सपायर दवाएँ और सुइयाँ अलग डिब्बे में रखकर कचरा लेने वाले को दें, बाकी डिब्बों में नहीं।",
     },
     "unseen": {
         "en": "Check both bins on the next round. There is not enough observed data for a score yet.",
@@ -39,6 +56,14 @@ ISSUES = {
         "fix": {"en": "Scrape leftover food into the green bin before putting the container in the blue bin.",
                 "hi": "डिब्बा नीले डिब्बे में डालने से पहले बचा खाना हरे डिब्बे में निकाल दें।"},
     },
+    "hidden_below": {
+        "what": {"en": "Wrong items were hidden under the top layer of a bin.",
+                 "hi": "डिब्बे में ऊपर की परत के नीचे ग़लत चीज़ें छिपाई गई थीं।"},
+        "why": {"en": "A clean-looking top does not help if the bin is mixed underneath; the whole load still has to be sorted by hand.",
+                "hi": "ऊपर से साफ़ दिखना काफ़ी नहीं, नीचे मिला कचरा होने पर पूरा डिब्बा हाथ से छाँटना पड़ता है।"},
+        "fix": {"en": "Sort as you throw, not just before the check. Random checks look below the top layer.",
+                "hi": "कचरा डालते समय ही अलग करें, सिर्फ़ जाँच से पहले नहीं। बिना बताए होने वाली जाँच नीचे तक देखती है।"},
+    },
     "one_bag": {
         "what": {"en": "Everything was thrown out together in one bag.",
                  "hi": "सारा कचरा एक ही थैली में डाल दिया गया।"},
@@ -63,6 +88,17 @@ def average(values):
     return round(mean(valid), 1) if valid else None
 
 
+def stream_averages(rows):
+    return {s: average([RATINGS[c[s]] for c in rows if c.get(s) is not None]) for s in ALL_STREAMS}
+
+
+def seen_expected(rows):
+    """Observed ratings and expected ratings. Optional streams count only when the check rated them."""
+    expected = sum(c.get(s) is not None for c in rows for s in ALL_STREAMS)
+    seen = sum(c.get(s) not in (None, "unseen") for c in rows for s in ALL_STREAMS)
+    return seen, expected
+
+
 def period(end: date):
     return end - timedelta(days=6), end
 
@@ -73,23 +109,26 @@ def summarize(floors, checks, end):
     results = []
     for floor in floors:
         own = [c for c in rows if c["floor_id"] == floor["id"]]
-        streams = {s: average([RATINGS[c[s]] for c in own]) for s in STREAMS}
-        seen = sum(c[s] != "unseen" for c in own for s in STREAMS)
+        streams = stream_averages(own)
+        seen, expected = seen_expected(own)
         complete = [c for c in own if all(c[s] != "unseen" for s in STREAMS)]
         results.append({
             "id": floor["id"], "name": floor["name"], "score": average(list(streams.values())),
             "streams": streams, "checks": len(own), "seen": seen,
-            "coverage": round(100 * seen / (2 * len(own)), 1) if own else None,
+            "expected": expected,
+            "coverage": round(100 * seen / expected, 1) if expected else None,
             "complete_checks": len(complete),
             "both_clean": sum(all(c[s] == "clean" for s in STREAMS) for c in complete),
             "hazards": sum(c.get("hazard") is True for c in own),
             "worker_reports": sum(c.get("reporter") == "worker" for c in own),
             "issues": issue_counts(own),
+            "deep_checks": sum(c.get("deep") is True for c in own),
         })
     scores = [f["score"] for f in results if f["score"] is not None]
     complete = [c for c in rows if all(c[s] != "unseen" for s in STREAMS)]
     clean_count = sum(all(c[s] == "clean" for s in STREAMS) for c in complete)
     cart = [c["kept_separate"] for c in rows if c["kept_separate"] is not None]
+    seen_all, expected_all = seen_expected(rows)
     return {
         "start": start.isoformat(), "end": end.isoformat(), "floors": results,
         "score": average(scores), "median": round(median(scores), 1) if scores else None,
@@ -100,8 +139,10 @@ def summarize(floors, checks, end):
         "cart_observed": len(cart),
         "hazards": sum(c.get("hazard") is True for c in rows),
         "worker_reports": sum(c.get("reporter") == "worker" for c in rows),
-        "coverage": round(sum(c[s] != "unseen" for c in rows for s in STREAMS) / (2 * len(rows)) * 100, 1) if rows else None,
-        "streams": {s: average([RATINGS[c[s]] for c in rows]) for s in STREAMS},
+        "coverage": round(seen_all / expected_all * 100, 1) if expected_all else None,
+        "streams": stream_averages(rows),
+        "deep_checks": sum(c.get("deep") is True for c in rows),
+        "hidden_found": sum(c.get("deep") is True and "hidden_below" in c.get("issues", []) for c in rows),
     }
 
 
@@ -130,6 +171,45 @@ def card_data(summary, floor_id):
     return {
         **floor, "median": summary["median"], "compared_floors": summary["active_floors"],
         "start": summary["start"], "end": summary["end"], "tip": TIPS[weakest],
-        "weakest": weakest, "tip_source": "Reviewed two-bin pilot guidance (rule-based)",
+        "weakest": weakest, "tip_source": "Reviewed pilot guidance (rule-based)",
         "feedback": feedback(summary, floor),
     }
+
+
+def deep_check_plan(floors, checks, end, secret):
+    """Which floors get a deep check (look below the top layer) this week.
+
+    About one floor in five, at least one. The pick is a keyed hash of the week and floor, so it
+    changes every week, is the same on every reload, and cannot be predicted without the operator secret.
+    """
+    if not floors:
+        return []
+    start, end = period(end)
+    week = start.isoformat()
+    ranked = sorted(floors, key=lambda f: hashlib.sha256(f"{secret}|{week}|{f['id']}".encode()).hexdigest())
+    done = {c["floor_id"] for c in checks if c.get("deep") is True and week <= c["date"] <= end.isoformat()}
+    return [{"id": f["id"], "name": f["name"], "done": f["id"] in done} for f in ranked[:max(1, ceil(len(floors) / 5))]]
+
+
+GOAL_RATE, GOAL_WEEKS, GOAL_MIN_CHECKS = 90, 12, 5
+
+
+def community_goal(floors, checks, end):
+    """Proposed community-level goal: weeks (of the last 12) with both bins clean in >= 90% of checks.
+
+    A community reward such as priority for a shared EV charging point is a proposal for the pilot,
+    not an existing scheme; individual households get no points or money (rewards can crowd out habit).
+    """
+    weeks = []
+    for back in range(GOAL_WEEKS - 1, -1, -1):
+        week = summarize(floors, checks, end - timedelta(days=7 * back))
+        rate = week["both_clean_rate"]
+        weeks.append({"end": week["end"], "rate": rate,
+                      "met": rate is not None and week["complete_checks"] >= GOAL_MIN_CHECKS and rate >= GOAL_RATE})
+    streak = 0
+    for week in reversed(weeks):
+        if not week["met"]:
+            break
+        streak += 1
+    return {"target_rate": GOAL_RATE, "weeks": GOAL_WEEKS, "min_checks": GOAL_MIN_CHECKS,
+            "weeks_met": sum(w["met"] for w in weeks), "streak": streak, "history": weeks}

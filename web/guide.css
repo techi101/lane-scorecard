@@ -1,0 +1,30 @@
+:root{--ink:#163f33;--paper:#f7f5ee;--card:#fff;--line:#d4dfca;--muted:#52634d;--wet:#2f7d32;--dry:#1f5fa8;--sanitary:#b3261e;--special:#7a5323;--ewaste:#555;--amber:#b7791f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font:700 30px/1.15 Georgia,serif;margin:6px 0 8px}
+h2{font-size:19px;margin:0 0 10px}
+p{margin:0 0 10px}
+.muted{color:var(--muted);font-size:14px}
+.lang{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;cursor:pointer;white-space:nowrap}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:12px;padding:12px;font:15px/1.4 ui-monospace,Consolas,monospace;color:var(--ink);background:#fcfcf9}
+.file{display:block;margin-top:12px;border:2px dashed var(--line);border-radius:12px;padding:14px;text-align:center;cursor:pointer}
+.file input{display:block;margin:8px auto 0;max-width:100%}
+.btn{display:inline-block;margin-top:14px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:600 17px system-ui,sans-serif;padding:13px 20px;cursor:pointer;width:100%}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.light{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.note{border-left:4px solid var(--amber);background:#fff8ec;padding:10px 12px;border-radius:8px;margin-top:14px;font-size:14px}
+.error{border-left:4px solid var(--sanitary);background:#fdeceb;padding:10px 12px;border-radius:8px;margin-top:14px}
+.counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+.count{border-radius:12px;padding:10px;color:#fff}
+.count strong{display:block;font-size:24px}
+.stream{border-left:6px solid var(--c);padding-left:14px}
+.stream h2{color:var(--c)}
+.stream ul{margin:0;padding-left:18px}
+.stream li{margin-bottom:8px}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;margin-left:6px;background:#fff1d6;color:#6b4a12}
+.small{font-size:13px}
+.loading{text-align:center;padding:40px}
+@media print{.lang,.btn,form{display:none}}

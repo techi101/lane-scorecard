@@ -2,7 +2,7 @@
 from math import sqrt
 from statistics import mean, variance
 
-from .scoring import ISSUES, RATINGS, STREAMS, TIPS, top_issue
+from .scoring import ALL_STREAMS, ISSUES, RATINGS, STREAM_LABELS, STREAMS, TIPS, top_issue
 
 
 CHANGE_POINTS = 5
@@ -54,8 +54,8 @@ def weekly_actions(summary, checks, previous=None):
     for floor in sorted(summary["floors"], key=lambda f: f["name"].casefold()):
         own = [c for c in rows if c["floor_id"] == floor["id"]]
         mixed_collection = sum(c["kept_separate"] is False for c in own)
-        missing = 2 * floor["checks"] - floor["seen"]
-        observed = {s: floor["streams"][s] for s in STREAMS if floor["streams"][s] is not None}
+        missing = floor["expected"] - floor["seen"]
+        observed = {s: floor["streams"][s] for s in ALL_STREAMS if floor["streams"][s] is not None}
         if floor["hazards"]:
             # Worker safety comes before every segregation goal.
             kind, title = "safety", "Make the bins safe to handle"
@@ -74,7 +74,7 @@ def weekly_actions(summary, checks, previous=None):
                       "hi": "कचरा लेने वाली टीम से अलग डिब्बों या अलग चक्कर की बात करें। अगली बार देखें कि कचरा अलग रखा गया या नहीं।"}
         elif missing:
             kind, title = "observe", "Fill the observation gaps"
-            evidence = f"{missing} of {2 * floor['checks']} bin ratings were marked not seen."
+            evidence = f"{missing} of {floor['expected']} bin ratings were marked not seen."
             action = {"en": "Check both bins on the next round. Keep missing observations visible when sharing this week's score.",
                       "hi": "अगले निरीक्षण में दोनों कूड़ेदान देखें। इस हफ़्ते का स्कोर साझा करते समय अधूरे निरीक्षण भी बताएँ।"}
         elif observed and min(observed.values()) < 100:
@@ -86,11 +86,11 @@ def weekly_actions(summary, checks, previous=None):
                 evidence = f"{ISSUES[issue]['what']['en']} Seen in {floor['issues'][issue]} of {floor['checks']} check(s)."
                 action = ISSUES[issue]["fix"]
             else:
-                evidence = f"The {'bio' if weakest == 'bio' else 'non-bio'} bin averaged {observed[weakest]:g}/100 across recorded checks."
+                evidence = f"The {STREAM_LABELS[weakest]} bin averaged {observed[weakest]:g}/100 across recorded checks."
                 action = TIPS[weakest]
         else:
             kind, title = "maintain", "Keep checking consistently"
-            evidence = f"Both bins were clean in all {floor['checks']} recorded check(s)."
+            evidence = f"Every rated bin was clean in all {floor['checks']} recorded check(s)."
             action = {"en": "Keep the same checking routine and share the floor's feedback. Confirm separation during collection when possible.",
                       "hi": "नियमित निरीक्षण जारी रखें और फ़्लोर का फ़ीडबैक साझा करें। संभव हो तो देखें कि उठाते समय कचरा अलग रहता है।"}
         actions.append({"floor_id": floor["id"], "name": floor["name"], "kind": kind,

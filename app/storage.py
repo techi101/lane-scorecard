@@ -58,6 +58,24 @@ class Store:
                 return False
         return True
 
+    def replace_if_unchanged(self, pk, sk, expected, value):
+        """Compare-and-swap prevents one operator tab overwriting another."""
+        old = json.dumps(expected, ensure_ascii=False, allow_nan=False)
+        data = json.dumps(value, ensure_ascii=False, allow_nan=False)
+        if self.table:
+            try:
+                self.table.put_item(
+                    Item={"pk": pk, "sk": sk, "data": data},
+                    ConditionExpression="#data = :expected",
+                    ExpressionAttributeNames={"#data": "data"},
+                    ExpressionAttributeValues={":expected": old})
+            except self.table.meta.client.exceptions.ConditionalCheckFailedException:
+                return False
+            return True
+        with self.connection() as db:
+            return db.execute("UPDATE records SET data=? WHERE pk=? AND sk=? AND data=?",
+                              (data, pk, sk, old)).rowcount == 1
+
     def list(self, pk):
         if self.table:
             from boto3.dynamodb.conditions import Key

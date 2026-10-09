@@ -23,10 +23,12 @@ def main():
     commands = [
         ("Backend and AWS SDK contracts", [python, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--basetemp", temporary]),
         ("JavaScript syntax", ["node", "--check", "web/app.js"]),
+        ("Collection follow-up JavaScript syntax", ["node", "--check", "web/followups.js"]),
         ("SAM infrastructure lint", [lint, "template.yaml"]),
     ]
     if args.browser:
         commands.append(("Desktop and mobile browser workflow", [python, "tests/browser_check.py"]))
+        commands.append(("Collection action browser workflow", [python, "tests/browser_followups.py"]))
     env = dict(os.environ)
     for name in ["LANE_TABLE", "LANE_PHOTO_BUCKET", "LANE_ENABLE_AI", "LANE_ADMIN_CODE", "LANE_DATA_DIR", "LANE_ORIGIN", "LANE_SECURE_COOKIE", "AWS_LAMBDA_FUNCTION_NAME"]:
         env.pop(name, None)

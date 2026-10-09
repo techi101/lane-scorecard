@@ -2,7 +2,7 @@
 // Every tap is spoken in Hindi so the page works without reading.
 const token = location.pathname.split('/')[2] || '';
 const app = document.getElementById('app');
-const s = {floors: [], demo: false, floor: null, bio: null, nonbio: null, hazard: false, issues: [], sending: false, error: ''};
+const s = {floors: [], demo: false, floor: null, bio: null, nonbio: null, hazard: false, deep: false, issues: [], sending: false, error: ''};
 const esc = v => String(v).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
 const RATES = [
@@ -18,6 +18,7 @@ const ISSUES = [
   {key: 'plastic_in_wet', pic: '🛍️', hi: 'हरे डिब्बे में प्लास्टिक', en: 'Plastic in green bin'},
   {key: 'food_in_dry', pic: '🍛', hi: 'नीले डिब्बे में खाना', en: 'Food in blue bin'},
   {key: 'one_bag', pic: '👜', hi: 'सब एक ही थैली में', en: 'All in one bag'},
+  {key: 'hidden_below', pic: '🔍', hi: 'नीचे छिपा ग़लत कचरा', en: 'Wrong items hidden underneath'},
 ];
 const HELP = 'पहले मंज़िल चुनें। फिर हरे और नीले डिब्बे को देखकर चेहरा दबाएँ। कुछ ग़लत दिखे तो उसकी तस्वीर दबाएँ। काँच, ब्लेड, सुई या खुला पैड मिले तो लाल बटन दबाएँ। आख़िर में हरा बटन, भेजें, दबाएँ।';
 
@@ -57,6 +58,7 @@ function render() {
     ${rateBlock('bio', 2)}${rateBlock('nonbio', 3)}
     <div class="step"><b>4</b>क्या ग़लत था? <span class="en">What was wrong? (optional)</span></div>
     <div class="rate">${ISSUES.map(i => `<button style="--c:var(--amber)" data-issue="${i.key}" aria-pressed="${s.issues.includes(i.key)}" aria-label="${i.hi}"><span class="face">${i.pic}</span>${i.hi}<span class="en">${i.en}</span></button>`).join('')}</div>
+    <button class="hazard deep" data-action="deep" aria-pressed="${s.deep}"><span class="face">🔍</span>मैंने नीचे तक देखा<span class="en">I looked below the top layer</span></button>
     <div class="step"><b>5</b>खतरनाक चीज़? <span class="en">Anything dangerous?</span></div>
     <button class="hazard" data-action="hazard" aria-pressed="${s.hazard}"><span class="face">⚠️ 🍾 🔪 💉</span>काँच, ब्लेड, सुई या खुला पैड मिला<span class="en">Glass, blade, needle or unwrapped sanitary waste</span></button>
     ${s.error ? `<div class="error" role="alert">${esc(s.error)}</div>` : ''}
@@ -68,13 +70,13 @@ async function send() {
   try {
     const r = await fetch(`/api/worker/${encodeURIComponent(token)}/reports`, {
       method: 'POST', headers: {'Content-Type': 'application/json', 'X-Lane-Request': '1'},
-      body: JSON.stringify({floor_id: s.floor, bio: s.bio, nonbio: s.nonbio, hazard: s.hazard, issues: s.issues}),
+      body: JSON.stringify({floor_id: s.floor, bio: s.bio, nonbio: s.nonbio, hazard: s.hazard, deep: s.deep, issues: s.issues}),
     });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || 'Not sent');
     const name = s.floors.find(f => f.id === s.floor)?.name || '';
     app.innerHTML = `<div class="done"><div class="big">✅</div><p>भेज दिया। धन्यवाद!<span class="en">Sent. Thank you!</span></p><p style="font-size:20px">${esc(name)}</p></div>`;
     speak('भेज दिया। धन्यवाद।');
-    Object.assign(s, {floor: null, bio: null, nonbio: null, hazard: false, issues: [], sending: false});
+    Object.assign(s, {floor: null, bio: null, nonbio: null, hazard: false, deep: false, issues: [], sending: false});
     setTimeout(render, 2500);
   } catch (e) {
     s.sending = false;
@@ -96,6 +98,7 @@ app.addEventListener('click', e => {
     s.issues = on ? [...s.issues, i.key] : s.issues.filter(k => k !== i.key);
     speak(on ? i.hi : `${i.hi} हटाया`);
   } else if (b.dataset.action === 'hazard') { s.hazard = !s.hazard; speak(s.hazard ? 'खतरनाक चीज़ दर्ज की' : 'खतरनाक चीज़ हटाई'); }
+  else if (b.dataset.action === 'deep') { s.deep = !s.deep; speak(s.deep ? 'नीचे तक देखा' : 'नीचे तक देखना हटाया'); }
   else if (b.dataset.action === 'help') { speak(HELP); return; }
   else if (b.dataset.action === 'send') { send(); return; }
   s.error = ''; render();
