@@ -1,6 +1,44 @@
 # Lane Scorecard
 
-A working, local-first campus waste-feedback app: record two-bin checks, compare a location with its community, and share one useful next step in English or Hindi.
+**Campus bins have two colours, but nobody checks whether people actually sort into them.** Lane Scorecard turns short bin checks into a score per location, one practical fix per week, and private English/Hindi feedback. It includes a picture-only Hindi page for the collection staff who sort mixed waste by hand.
+
+**Live on AWS:** https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com (the operator pages need an access code; [My Bin Guide](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/guide) is public) · **Demo video:** _link added at submission_ · **Track:** Waste and Energy
+
+| Weekly plan (one fix per location) | Collection staff page (picture-only Hindi) | Private scorecard (Hindi) |
+|---|---|---|
+| ![Weekly plan](docs/images/weekly-plan.png) | ![Collection staff page](docs/images/worker-page.png) | ![Hindi scorecard](docs/images/scorecard-hindi.png) |
+
+_Screenshots use the clearly labelled **Demo** workspace (simulated data). Real pilot data lives in a separate workspace._
+
+## How it runs on AWS
+
+![Architecture](docs/images/architecture.png)
+
+| AWS service | The job it does here |
+|---|---|
+| **AWS Lambda** | Runs the whole app (Python FastAPI): scoring, weekly plan, scorecards, staff reports, sign-in, photo checks |
+| **Amazon API Gateway** (HTTP API) | The public HTTPS address, with request throttling |
+| **Amazon DynamoDB** | Stores locations, checks, scorecards, audit log and sessions; demo and real pilot kept apart |
+| **Amazon S3** (private) | Bin photos, with image metadata removed and no public access |
+| **Amazon EventBridge** | Every Monday at 08:00 IST: makes the weekly scorecards and cleans up old data |
+| **Amazon CloudWatch** | Lambda logs (14-day retention) |
+| **AWS IAM + AWS SAM** | Least-privilege role (only this table, this bucket, Nova Lite); the whole stack is code in `template.yaml` |
+| **Amazon Bedrock** (Nova Lite) | Suggests a bin rating from a photo and reads receipt photos. A human always makes the final call. **Currently off:** our new account's Bedrock quota is 0, and an AWS quota case is open (10 Oct). |
+
+## First real campus data (NSUT, 9 Oct 2026, evening)
+
+| Measure | Result |
+|---|---|
+| Real checks recorded | 9 checks with 14 photos, at 9 bin locations (kiosk, canteen, paths, roadside bins) |
+| Blue (dry) bin | **Clean in 7 of 7** checks where it could be seen |
+| Green (wet) bin | **Never clean**: mixed in 5, a few wrong items in 2 (of 7 seen) |
+| Most common problem | **Plastic in the green bin**: tagged in 6 of 9 checks |
+
+**What this means:** the dry bin works; the wet bin fails because plastic goes in it. So the useful fix is narrow ("keep plastic out of the green bin"), not a generic "please segregate" poster. This is the kind of specific action the weekly plan produces.
+
+**Limits, stated plainly:** this is one evening at one campus. Ratings were read from photos and are being confirmed by the team, and location names are being finalised. It is an early signal, not proof of impact. More checks are being added during the event.
+
+## Problem statement and provenance
 
 **Problem:** help campus staff identify where two-bin waste segregation breaks down, give residents useful feedback, and track changes without collecting resident identities. It fits Environmental Hacks' **Waste and Energy** track. This is our chosen problem statement within the event's open tracks. The build began before the event opened; theme fit does not establish entry eligibility. See [problem statement and requirement mapping](docs/PROBLEM_STATEMENT.md).
 
@@ -8,7 +46,7 @@ A working, local-first campus waste-feedback app: record two-bin checks, compare
 
 Start with the [complete project guide](docs/PROJECT_GUIDE.md), [AWS deployment guide](docs/AWS.md), or [project writeup](docs/PROJECT_WRITEUP.md).
 
-**Status:** deployed on AWS on 9 Oct 2026 (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com: API Gateway, Lambda and DynamoDB confirmed working. Redeployed on 9 Oct 2026 (~20:15 IST) from commit `e32d701` with the features below; the live site was checked for `/guide`, sign-in, the dashboard (four bin slots, deep-check plan, community goal) and follow-ups. AI is **off** (`EnableAI=0`): a test Bedrock call was refused because AWS was still verifying the new account. Receipt photos and bin-photo suggestions need a redeploy with `EnableAI=1` after verification. Real pilot results have not been collected.
+**Status (10 Oct 2026):** deployed on AWS (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com, using DynamoDB storage. It was last redeployed on 10 Oct at 01:29 IST, and health, sign-in and the dashboard were checked. AI is **off** (`EnableAI=0`). Every Bedrock on-demand and cross-region quota on the new account is 0, so calls fail with "Operation not allowed". Quota case 179161739400986 is open. Receipt photos and bin-photo suggestions need a redeploy with `EnableAI=1` once it is approved. The real pilot has 9 checks from 9 Oct (see above); their ratings are being confirmed.
 
 ## Open it
 
@@ -74,7 +112,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 
 ## What remains external
 
-Real Bedrock calls (the account is waiting for AWS verification), real-bin photo evaluation, pilot lead permission, pilot observations, public repository and recorded submission video. These are not claimed complete.
+Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, the public repository and the recorded submission video. These are not claimed complete.
 
 The worker page's Hindi voice uses the phone browser's built-in speech; it is silent on phones without a Hindi voice, and the page still works by pictures alone. The worker page has not yet been tested with real staff.
 
@@ -144,4 +182,4 @@ To back up local data, stop the server and copy `.local/lane.sqlite3`, `.local/p
 
 ## AI assistance and licences
 
-Implementation: OpenAI Codex. Earlier ideation and research: Claude Code, as recorded in the user's handoff. No archived prototype source was copied into this implementation. Dependencies retain their own licences; see `docs/ATTRIBUTION.md`. No image-generation service was used.
+AI coding tools used: OpenAI Codex (main implementation) and Claude Code (research, the collection staff page, the week-over-week check, AWS deployment, campus scale-up, Photos and rename features, and this README's diagram and screenshots). No archived prototype source was copied into this implementation. Dependencies retain their own licences; see `docs/ATTRIBUTION.md`. No image-generation service was used.

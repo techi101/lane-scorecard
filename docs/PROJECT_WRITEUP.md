@@ -2,7 +2,7 @@
 
 **Theme:** Waste and Energy — waste segregation.
 
-**Status:** deployed on AWS (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com, using DynamoDB storage; verified on 9 Oct 2026 with health, sign-in and access checks. Bedrock is switched off. Real environmental impact has not been measured.
+**Status:** live on AWS (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com. It runs on Lambda, API Gateway, DynamoDB, S3, EventBridge and CloudWatch. Bedrock is switched off while AWS reviews our new account's quota. First real campus checks were recorded on 9 Oct 2026. Real environmental impact has not been measured.
 
 ## The problem
 
@@ -12,7 +12,7 @@ Two labelled bins do not tell campus staff whether waste is being separated cons
 
 An operator sets up permitted locations, records both bin ratings and optionally notes what happens during collection. The app calculates transparent seven-day scores, keeps missing evidence visible, and compares consecutive weeks. Residents can receive a private English/Hindi scorecard with one practical action. A weekly operator report summarises scores, coverage and follow-up actions while excluding private notes and photos.
 
-The app runs locally with FastAPI and SQLite. Its responsive browser interface supports phone-based checks. Demo data and real-pilot data are kept separate. Corrections revoke old scorecard links, and every final rating remains a human decision.
+The app is a Python FastAPI application running on AWS Lambda, with DynamoDB storage; the same code runs locally with SQLite for development. Its responsive browser interface supports phone-based checks. Demo data and real-pilot data are kept separate. Corrections revoke old scorecard links, and every final rating remains a human decision.
 
 ## The people who handle the bins
 
@@ -34,13 +34,25 @@ The comparison uses only checks where both bins were seen, and calls a change cl
 
 ## Where AWS fits
 
-The supplied SAM template deploys the app with API Gateway and Lambda, persistent records in DynamoDB, private photo storage in S3, a weekly EventBridge trigger and CloudWatch logs. Optional Bedrock Nova photo suggestions are implemented with a manual fallback. The deployment helper stages runtime files, builds for Linux and uses a guided SAM changeset review.
+The whole stack is defined in one AWS SAM template and is live in us-east-1 (architecture diagram: [docs/images/architecture.png](images/architecture.png)):
 
-These integrations have local infrastructure and SDK-contract validation. A real AWS demo must be recorded after deployment; a template or stubbed test is not proof of a live AWS integration.
+- **AWS Lambda** runs the app: scoring, the weekly plan, scorecards, staff reports, sign-in and photo checks.
+- **Amazon API Gateway** (HTTP API) is the public HTTPS address, with throttling.
+- **Amazon DynamoDB** stores locations, checks, scorecards, the audit log and sessions, with demo and real-pilot data kept apart.
+- **Amazon S3** (private) stores bin photos with metadata removed.
+- **Amazon EventBridge** makes the weekly scorecards every Monday at 08:00 IST.
+- **Amazon CloudWatch** keeps the logs; **IAM** gives the function access only to its own table, bucket and model.
+- **Amazon Bedrock** (Nova Lite) suggests a bin rating from a photo and reads receipt photos, always with a human making the final decision. It is coded and permissioned, but switched off: our new account's Bedrock quota is currently 0, and an AWS quota case is open.
+
+Changes are deployed through a reviewed SAM changeset.
+
+## First real campus data
+
+On the evening of 9 Oct 2026 we recorded 9 real checks, with 14 photos, at 9 bin locations on the NSUT campus. The blue (dry) bin was clean in all 7 checks where it was visible. The green (wet) bin was never clean: mixed in 5 and a few wrong items in 2. Plastic in the green bin was tagged in 6 of 9 checks. The useful fix is therefore narrow: keep plastic out of the green bin. This is one evening at one campus, the ratings were read from photos and are being confirmed by the team, and it is an early signal, not proof of impact.
 
 ## What can be claimed
 
-Working local observation, scoring, action-plan, report and scorecard workflows. No claim of real waste reduction, model accuracy, deployment success or competition eligibility should be added until supported by evidence.
+A working, deployed observation, scoring, action-plan, report, scorecard and staff-reporting workflow on AWS, and a first evening of real campus checks. No claim of real waste reduction, AI accuracy or competition eligibility is made.
 
 ## Provenance and credits
 
@@ -48,4 +60,4 @@ The initial implementation began before the event's published opening. Under the
 
 OpenAI Codex assisted implementation. Earlier planning and research used Claude. Claude Code implemented the collection staff link and picture-only worker page, the week-over-week follow-up check, the simulated evidence script, and the local AWS SAM build and run (`sam validate`, `sam build`, `sam local start-api`). Dependencies and credits are recorded in [ATTRIBUTION.md](ATTRIBUTION.md).
 
-This document is a project writeup, not a submitted entry. No public repository or YouTube video link has been created by this continuation.
+Demo video: _link added at submission_.
