@@ -83,7 +83,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 
 ## Implemented
 
-- Responsive dashboard, mobile check form, observation log and pilot setup.
+- Responsive dashboard, mobile check form, observation log and pilot setup. On phones and smaller tablets, navigation opens as a drawer with a close button, outside-tap dismissal and automatic closing after page selection; opening it preserves unfinished check drafts.
 - Separate demo and real-pilot records, with explicit source labels on screens, cards and exports.
 - Persistent SQLite database locally; DynamoDB storage adapter for AWS.
 - Two-bin scoring, observation coverage, community median, four-week trend and downstream collection observations.

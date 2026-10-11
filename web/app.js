@@ -65,14 +65,40 @@ function renameLocation(f) {
   modal.querySelector('#rename-form').addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(e.target);try{await api(endpoint('floors/'+encodeURIComponent(f.id)),{method:'PUT',body:JSON.stringify({name:fd.get('name'),area:(fd.get('area')||'').trim(),permission:true})});close();await render();toast(tr("Location renamed."));}catch(err){$('#rename-error').textContent=err.message;}});
 }
 function loginPage(error='') {
+  setNavigation(false,false);
   $('#app').innerHTML=`<div class="login"><main class="login-card" id="main">${brand()}<button class="lang" data-action="language">${state.lang==='en'?'हिन्दी':'English'}</button><form class="login-form" id="login-form"><h2>${tr("Sign in")}</h2><p class="muted">${tr("For the team running the NSUT bin pilot. Cleaning staff use their own worker link and do not need this.")}</p><label class="field">${tr("Access code")}<input name="code" type="password" autocomplete="current-password" required placeholder="${tr("Paste your access code")}" autofocus></label><div class="form-error" id="login-error" role="alert">${esc(error)}</div><button class="btn" type="submit">${tr("Sign in")}</button><p class="hint">${tr("Running it on your laptop? The code is in")} <code>.local/admin-code.txt</code> ${tr("in the project folder.")}</p></form></main></div>`;
   $('#login-form').addEventListener('submit',async e=>{e.preventDefault();const button=$('button[type=submit]',e.target);button.disabled=true;try{await api('/api/login',{method:'POST',body:JSON.stringify({code:new FormData(e.target).get('code')})});await render();}catch(err){$('#login-error').textContent=err.message;button.disabled=false;}});
 }
 const navItems=[['dashboard','grid','Overview','अवलोकन'],['check','clipboard','Record a check','निरीक्षण दर्ज करें'],['plan','check','Weekly plan','साप्ताहिक योजना'],['cards','card','Scorecards','स्कोरकार्ड'],['history','book','Observation log','निरीक्षण सूची'],['photos','camera','Photos','फ़ोटो'],['setup','building','Pilot setup','पायलट सेटअप'],['guide','leaf','How it works','कैसे काम करता है']];
 function shell(content) {
   const item=navItems.find(x=>x[0]===state.view), name=item?t(item[2],item[3]):tr('Overview');
-  return `<div class="shell"><aside class="sidebar" id="sidebar">${brand()}<div class="workspace"><label for="workspace">${tr("Workspace")}</label><select id="workspace"><option value="demo" ${state.workspace==='demo'?'selected':''}>${tr("Explore the demo")}</option><option value="pilot" ${state.workspace==='pilot'?'selected':''}>${tr("Your real pilot")}</option></select></div><nav class="nav" aria-label="${tr("Main navigation")}">${navItems.map(([view,i,en,hi],index)=>`<button data-nav="${view}" class="${state.view===view?'active':''}" ${state.view===view?'aria-current="page"':''}>${icon(i)}${t(en,hi)}${index===1?'<span class="number">＋</span>':''}</button>`).join('')}</nav><div class="sidebar-bottom"><button data-action="logout">${icon('logout')} ${t('Sign out','साइन आउट')}</button></div></aside><div class="content"><header class="topbar"><button class="mobile-menu" data-action="menu" aria-label="${tr("Toggle navigation")}">${icon('menu')}</button><span class="mobile-brand">Lane Scorecard</span><div class="breadcrumb">${state.workspace==='demo'?t('Demo workspace','डेमो'):t('Real pilot','असली पायलट')} <span>/ &nbsp;${esc(name)}</span></div><div class="top-actions"><span class="status"><span class="status-dot"></span>${state.health.storage==='dynamodb'?tr("AWS storage"):tr("Local workspace")}</span><button class="lang" data-action="language">${state.lang==='en'?'हिन्दी':'English'}</button><button class="signout" data-action="logout">${icon('logout')}<span>${t('Sign out','साइन आउट')}</span></button></div></header><main class="main" id="main">${state.workspace==='demo'?`<div class="notice">${icon('info')}<span><strong>${tr("Demo")}</strong> &nbsp;${tr("Simulated data for practice. Nothing here is real.")}</span><a href="#setup" data-switch-pilot>${tr("Start your real pilot")} ${icon('arrow')}</a></div>`:`<div class="notice" style="background:#edf3e7;border-color:#d7e1cd;color:#536b42">${icon('shield')}<span><strong>${tr("Real pilot")}</strong> &nbsp;${tr("Record only what you actually saw, with permission.")}</span></div>`}${content}<footer class="footer-line"><span>${tr("Lane Scorecard · NSUT campus bin pilot")}</span><span>${tr("Ratings are made by people, not by AI")}</span></footer></main></div></div>`;
+  return `<div class="shell"><aside class="sidebar" id="sidebar" aria-label="${tr("Main navigation")}"><button class="sidebar-close" data-action="close-menu" aria-label="${t('Close navigation','नेविगेशन बंद करें')}"><span aria-hidden="true">&times;</span> ${tr("Close")}</button>${brand()}<div class="workspace"><label for="workspace">${tr("Workspace")}</label><select id="workspace"><option value="demo" ${state.workspace==='demo'?'selected':''}>${tr("Explore the demo")}</option><option value="pilot" ${state.workspace==='pilot'?'selected':''}>${tr("Your real pilot")}</option></select></div><nav class="nav" aria-label="${tr("Main navigation")}">${navItems.map(([view,i,en,hi],index)=>`<button data-nav="${view}" class="${state.view===view?'active':''}" ${state.view===view?'aria-current="page"':''}>${icon(i)}${t(en,hi)}${index===1?'<span class="number">＋</span>':''}</button>`).join('')}</nav><div class="sidebar-bottom"><button data-action="logout">${icon('logout')} ${t('Sign out','साइन आउट')}</button></div></aside><button class="nav-backdrop" data-action="close-menu" tabindex="-1" aria-label="${t('Close navigation','नेविगेशन बंद करें')}"></button><div class="content"><header class="topbar"><button class="mobile-menu" data-action="menu" aria-controls="sidebar" aria-expanded="false" aria-label="${tr("Toggle navigation")}">${icon('menu')}</button><span class="mobile-brand">Lane Scorecard</span><div class="breadcrumb">${state.workspace==='demo'?t('Demo workspace','डेमो'):t('Real pilot','असली पायलट')} <span>/ &nbsp;${esc(name)}</span></div><div class="top-actions"><span class="status"><span class="status-dot"></span>${state.health.storage==='dynamodb'?tr("AWS storage"):tr("Local workspace")}</span><button class="lang" data-action="language">${state.lang==='en'?'हिन्दी':'English'}</button><button class="signout" data-action="logout">${icon('logout')}<span>${t('Sign out','साइन आउट')}</span></button></div></header><main class="main" id="main">${state.workspace==='demo'?`<div class="notice">${icon('info')}<span><strong>${tr("Demo")}</strong> &nbsp;${tr("Simulated data for practice. Nothing here is real.")}</span><a href="#setup" data-switch-pilot>${tr("Start your real pilot")} ${icon('arrow')}</a></div>`:`<div class="notice" style="background:#edf3e7;border-color:#d7e1cd;color:#536b42">${icon('shield')}<span><strong>${tr("Real pilot")}</strong> &nbsp;${tr("Record only what you actually saw, with permission.")}</span></div>`}${content}<footer class="footer-line"><span>${tr("Lane Scorecard · NSUT campus bin pilot")}</span><span>${tr("Ratings are made by people, not by AI")}</span></footer></main></div></div>`;
 }
+const compactNavigation = window.matchMedia('(max-width:850px)');
+function setNavigation(open, moveFocus=true) {
+  const sidebar=$('#sidebar'), content=$('.content'), menu=$('[data-action=menu]');
+  open=Boolean(open && compactNavigation.matches && sidebar);
+  document.body.classList.toggle('nav-open',open);
+  if(!sidebar)return;
+  sidebar.classList.toggle('open',open);
+  sidebar.inert=compactNavigation.matches && !open;
+  content.inert=open;
+  menu.setAttribute('aria-expanded',String(open));
+  if(open){sidebar.setAttribute('role','dialog');sidebar.setAttribute('aria-modal','true');}
+  else {sidebar.removeAttribute('role');sidebar.removeAttribute('aria-modal');}
+  if(moveFocus)(open ? $('.sidebar-close') : menu).focus({preventScroll:true});
+}
+compactNavigation.addEventListener('change',()=>setNavigation(false,false));
+document.addEventListener('keydown',event=>{
+  if(!document.body.classList.contains('nav-open'))return;
+  if(event.key==='Escape'){event.preventDefault();setNavigation(false);}
+  if(event.key==='Tab'){
+    const controls=[...$('#sidebar').querySelectorAll('a[href],button,select')].filter(el=>!el.disabled && el.getClientRects().length);
+    const first=controls[0],last=controls[controls.length-1];
+    if(event.shiftKey && document.activeElement===first){event.preventDefault();last.focus();}
+    else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first.focus();}
+  }
+});
 function pageHead(eyebrow,title,description,action='') {return `<div class="page-head"><div><h1>${title}</h1><p>${description}</p></div>${action}</div>`;}
 function dateToolbar(label=tr("Your week at a glance")) {return `<div class="toolbar"><h3>${label}</h3><label class="date-picker">${tr("Week ending")} <input type="date" id="week-end" value="${state.end}" max="${state.health.today}" aria-label="${tr("Week ending")}"></label></div>`;}
 function stat(label,n,suffix,detail,i) {return `<article class="stat"><div class="stat-top">${label}${icon(i)}</div><div class="stat-value">${value(n)}<small>${suffix}</small></div><div class="stat-bottom">${detail}</div></article>`;}
@@ -177,6 +203,7 @@ function guidePage() {
   return pageHead('',tr("How it works"),tr("Simple scoring. Visible limits. A human behind every observation."))+`<div class="rules-grid"><section class="panel prose"><h2>${tr("One complete feedback loop")}</h2><ul><li>${tr("Record the visible condition of both bins.")}</li><li>${tr("Compare a location’s score with the campus median.")}</li><li>${tr("Share one useful action in English or Hindi.")}</li><li>${tr("Repeat the check and observe any change.")}</li></ul><p>${tr("No cash rewards, public resident rankings or invented impact claims.")}</p><h3>${tr("How a score is calculated")}</h3><p>${tr("Clean = 100. A few wrong items = 50. Mixed = 0. Not seen is excluded, never counted as clean.")}</p><p>${tr("We average each bin type’s observed ratings over seven days, then average the available bin-type scores for each location. The campus score is the average of scored locations; the median is the middle floor score.")}</p><p>${tr("Coverage is the proportion of bin ratings that were actually observed. A high score with low coverage is incomplete evidence.")}</p><h3>${tr("Both bins clean")}</h3><p>${tr("The percentage of fully observed checks where both bins were rated clean. Checks with either bin marked “not seen” are excluded from this denominator.")}</p></section><section class="panel prose"><h2>${tr("Built for this pilot")}</h2><details open><summary>${tr("Two bins, not a legal compliance certificate")}</summary><p>${tr("This campus pilot uses NSUT’s paired green (degradable, kitchen waste) and blue (non-degradable, recyclable) bins. Local collection arrangements may differ. It does not measure compliance with a national four-stream waste rule. The CSV is our own observation log.")}</p></details><details open><summary>${tr("Photos and AI")}</summary><p>${tr("Photos are optional and private to operators. Metadata is stripped during processing. When Bedrock is connected, it suggests a rating; the operator chooses the final answer. When AI is unavailable, no prediction is fabricated.")}</p></details><details open><summary>${tr("Privacy and sharing")}</summary><p>${tr("No resident identities are needed. A scorecard link reveals only its location’s aggregate feedback and the campus median. Treat the link as private; anyone holding it can read it. You can revoke it.")}</p></details><details open><summary>${tr("What this can demonstrate")}</summary><p>${tr("Repeated real observations can show an early pilot trend. They do not establish causation. Demo trends are generated examples. Report independently collected data and evaluation results honestly.")}</p></details></section></div>`;
 }
 async function render() {
+  setNavigation(false,false);
   const serial=++state.render;
   try {
     if(!state.health.today)state.health=await api('/api/health');
@@ -189,7 +216,7 @@ async function render() {
     if(state.view==='photos'||state.view==='history'){state.photos=await api(`/api/${ws}/photos`);state.photoStreams=Object.fromEntries(state.photos.map(x=>[x.id,x.stream]));}
     if(serial!==state.render)return;
     const pages={photos:photosPage,dashboard:overview,check:checkPage,plan:planPage,cards:cardsPage,history:historyPage,setup:setupPage,guide:guidePage};
-    $('#app').innerHTML=shell((pages[state.view]||overview)());bind();
+    $('#app').innerHTML=shell((pages[state.view]||overview)());setNavigation(false,false);bind();
   } catch(error) {
     if(error.status===401)loginPage();
     else {$('#app').innerHTML=`<main id="main" class="public-wrap"><section class="panel">${empty(tr("Could not load your workspace."),esc(error.message),`<button class="btn" data-action="retry">${tr("Try again")}</button>`)}</section></main>`;bind();}
@@ -235,13 +262,15 @@ async function copyLink(token){const url=cardUrl(token);try{await navigator.clip
 document.addEventListener('click',async event=>{
   const target=event.target.closest('[data-nav],[data-action],[data-card],[data-copy],[data-revoke],[data-edit],[data-delete-check],[data-delete-floor],[data-rename-floor],[data-remove-photo],[data-delete-photo],[data-photos-for],[data-switch-pilot],[data-followup]');if(!target)return;
   event.preventDefault();
+  if(target.dataset.action==='menu'){setNavigation(!$('#sidebar').classList.contains('open'));return;}
+  if(target.dataset.action==='close-menu'){setNavigation(false);return;}
+  if(target.dataset.nav)setNavigation(false);
   if(state.uploading){toast(tr("Wait for the photo upload to finish."));return;}
   try{
     if(target.dataset.nav){await navigate(target.dataset.nav);return;}
     if(target.dataset.followup){state.draft=newDraft();state.draft.floor_id=target.dataset.followup;state.view='check';await render();window.scrollTo({top:0});return;}
     if(target.hasAttribute('data-switch-pilot')){state.workspace='pilot';state.view='setup';remember('lane-workspace','pilot');await render();return;}
     const action=target.dataset.action;
-    if(action==='menu'){$('#sidebar').classList.toggle('open');return;}
     if(action==='retry'){await render();return;}
     if(action==='photo-clear'){state.photoFilter={floor:'',date:''};await render();return;}
     if(target.dataset.photosFor){const [floor,date]=target.dataset.photosFor.split('|');state.photoFilter={floor,date};await navigate('photos');return;}
