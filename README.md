@@ -46,7 +46,7 @@ _Screenshots use the clearly labelled **Demo** workspace (simulated data). Real 
 
 Start with the [complete project guide](docs/PROJECT_GUIDE.md), [AWS deployment guide](docs/AWS.md), or [project writeup](docs/PROJECT_WRITEUP.md).
 
-**Status (10 Oct 2026):** deployed on AWS (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com, using DynamoDB storage. It was last redeployed on 10 Oct at 01:29 IST, and health, sign-in and the dashboard were checked. AI is **off** (`EnableAI=0`). Every Bedrock on-demand and cross-region quota on the new account is 0, so calls fail with "Operation not allowed". Quota case 179161739400986 is open. Receipt photos and bin-photo suggestions need a redeploy with `EnableAI=1` once it is approved. The real pilot has 9 checks from 9 Oct (see above); their ratings are being confirmed.
+**Status (11 Oct 2026):** deployed on AWS (stack `lane-scorecard`, us-east-1) at https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com, using DynamoDB storage. The Hindi fixes (`92212c5`) were redeployed on 11 Oct at 14:39 IST. CloudFormation finished successfully, the Lambda code checksum matched the release, and the existing data resources were retained. Live checks passed for health, the deployed JavaScript and guide page, and Hindi receipt parsing (milk and banana recognised, zero unknown items). [Open in Hindi](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/?lang=hi). AI is **off** (`EnableAI=0`). Every Bedrock on-demand and cross-region quota on the new account is 0, so calls fail with "Operation not allowed". Quota case 179161739400986 is open. Receipt photos and bin-photo suggestions need a redeploy with `EnableAI=1` once it is approved. The real pilot has 9 checks from 9 Oct (see above); their ratings are being confirmed.
 
 ## Open it
 
@@ -113,7 +113,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 
 ## What remains external
 
-Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, the public repository and the recorded submission video. These are not claimed complete.
+Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, and the recorded submission video and its link above. The code is pushed to [GitHub](https://github.com/techi101/lane-scorecard); the repository is currently private, so public submission access remains to be arranged. These external steps are not claimed complete.
 
 The worker page's Hindi voice uses the phone browser's built-in speech. It waits for voices to load and explains when a Hindi voice is missing or playback fails; picture-based reporting still works. Automated browser checks cover delayed voices, speech errors and reporting without speech. Audible playback on each target phone and usability with real staff still need checking.
 
