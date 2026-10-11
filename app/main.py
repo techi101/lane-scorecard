@@ -241,7 +241,11 @@ def create_app(directory=None):
         })
         return response
 
-    def authenticated(request: Request):
+    # View-only access: anyone may read both workspaces without signing in, so judges and visitors can
+    # see the real pilot. Every change still needs the operator code. LANE_PUBLIC_VIEW=0 turns this off.
+    public_view = os.getenv("LANE_PUBLIC_VIEW", "1") != "0"
+
+    def operator(request: Request):
         token = request.cookies.get("lane_session", "")
         session = store.get("sessions", digest(token)) if token else None
         if not session or session["expires"] < time.time():
@@ -249,6 +253,14 @@ def create_app(directory=None):
                 store.delete("sessions", digest(token))
             raise HTTPException(401, "Sign in with your operator access code.")
         return session
+
+    def authenticated(request: Request):
+        try:
+            return operator(request)
+        except HTTPException:
+            if public_view and request.method in ("GET", "HEAD"):
+                return {"guest": True}
+            raise
 
     def audit(workspace, action, entity):
         record = {"id": str(uuid4()), "at": now(), "action": action, "entity": entity}
@@ -293,8 +305,18 @@ def create_app(directory=None):
         return {"ok": True}
 
     @app.get("/api/session")
-    def session(_=Depends(authenticated)):
+    def session(_=Depends(operator)):
         return {"ok": True}
+
+    @app.get("/api/viewer")
+    def viewer(request: Request):
+        try:
+            operator(request)
+            signed_in = True
+        except HTTPException:
+            signed_in = False
+        latest = {ws: max((c["date"] for c in store.list(f"{ws}:checks")), default=None) for ws in ("demo", "pilot")}
+        return {"operator": signed_in, "public_view": public_view, "latest": latest}
 
     @app.post("/api/logout")
     def logout(request: Request, response: Response):
@@ -538,7 +560,7 @@ def create_app(directory=None):
         return link["workspace"]
 
     @app.get("/api/{workspace}/worker-link")
-    def get_worker_link(workspace: Workspace, _=Depends(authenticated)):
+    def get_worker_link(workspace: Workspace, _=Depends(operator)):
         current = store.get("worker-index", workspace)
         return {"token": current["token"] if current else None}
 
@@ -643,7 +665,7 @@ def create_app(directory=None):
         return HTMLResponse(content, headers={"Content-Disposition": f'attachment; filename="lane-{workspace}-{end.isoformat()}-report.html"'})
 
     @app.get("/api/{workspace}/audit")
-    def audit_log(workspace: Workspace, _=Depends(authenticated)):
+    def audit_log(workspace: Workspace, _=Depends(operator)):
         return sorted(store.list(f"{workspace}:audit"), key=lambda x: x["at"], reverse=True)[:100]
 
     register_followups(app, store, authenticated, audit)

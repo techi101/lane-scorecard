@@ -17,6 +17,8 @@ from app.actions import weekly_actions
 def client(tmp_path, monkeypatch):
     for key in ['LANE_TABLE', 'LANE_ADMIN_CODE', 'LANE_PHOTO_BUCKET', 'AWS_LAMBDA_FUNCTION_NAME', 'LANE_ENABLE_AI', 'LANE_SECURE_COOKIE', 'LANE_ORIGIN']:
         monkeypatch.delenv(key, raising=False)
+    # These tests cover the private mode; tests/test_public_view.py covers the default view-only access.
+    monkeypatch.setenv('LANE_PUBLIC_VIEW', '0')
     app = create_app(tmp_path)
     with TestClient(app) as test:
         test.headers['X-Lane-Request'] = '1'

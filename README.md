@@ -2,7 +2,7 @@
 
 **Campus bins have two colours, but nobody checks whether people actually sort into them.** Lane Scorecard turns short bin checks into a score per location, one practical fix per week, and private English/Hindi feedback. It includes a picture-only Hindi page for the collection staff who sort mixed waste by hand.
 
-**Live on AWS:** https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com (the operator pages need an access code; see [Try it without signing in](#try-it-without-signing-in)) · **Demo video:** _link added at submission_ · **Track:** Waste and Energy
+**Live on AWS:** https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com (open it: no sign-in needed to look around; see [Try it without signing in](#try-it-without-signing-in)) · **Demo video:** _link added at submission_ · **Track:** Waste and Energy
 
 | Weekly plan (one fix per location) | Collection staff page (picture-only Hindi) | Private scorecard (Hindi) |
 |---|---|---|
@@ -12,15 +12,13 @@ _Screenshots use the clearly labelled **Demo** workspace (simulated data). Real 
 
 ## Try it without signing in
 
-These pages are live on AWS and open without an access code. The scorecard and collection staff links point to the **Demo** workspace, so everything they show is simulated.
+Open the [live site](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com). Anyone can look around in view-only mode: the overview, weekly plan, scorecards, observation log and photos, for both workspaces.
 
-| Page | Link | What to try |
-|---|---|---|
-| My Bin Guide (public) | [Open](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/guide) · [Hindi](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/guide?lang=hi) | Paste a receipt or order list (Zepto, Blinkit, a shop bill) and see which bin each part goes in. |
-| Private scorecard for one location | [English](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/card/DEMO_CARD_TOKEN?lang=en) · [Hindi](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/card/DEMO_CARD_TOKEN?lang=hi) | What residents of one location receive: what went wrong, why it matters, how other locations did, and one thing to try. |
-| Collection staff page (picture-only Hindi) | [Open on a phone](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/w/DEMO_WORKER_TOKEN) | Pick a location, tap a face for each bin, and send. Every tap is spoken aloud. A report sent here is added to the Demo workspace as simulated data. |
+- **Your real pilot** (Workspace menu): the real NSUT checks from 9 Oct 2026 and their bin photos. Visitors open on the latest week that has checks.
+- **Explore the demo**: simulated data, clearly labelled, with several weeks of history for the weekly plan and "vs last week" check.
+- **[My Bin Guide](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/guide)** ([Hindi](https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com/guide?lang=hi)): paste a receipt or order list (Zepto, Blinkit, a shop bill) and see which bin each part goes in.
 
-The operator pages (overview, recording a check, weekly plan, photos) need an access code, because the same sign-in also holds the real NSUT pilot data. The [demo video](#lane-scorecard) walks through them instead.
+Recording, correcting or deleting checks, renaming locations and creating links all need the operator sign-in, so visitors cannot change the pilot data. The collection staff link and the audit log stay operator-only. `LANE_PUBLIC_VIEW=0` switches view-only access off; `tests/test_public_view.py` checks both modes.
 
 ## How it runs on AWS
 
