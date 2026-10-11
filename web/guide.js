@@ -3,13 +3,13 @@
 // Nothing is saved. The receipt is for the household; the collector never sees it.
 const app = document.getElementById('app');
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
-let lang = 'en';
-try { lang = localStorage.getItem('lane-guide-lang') || 'en'; } catch (_) { /* storage is optional */ }
+let lang = LaneLanguage.get();
 const s = {text: '', image: '', fileName: '', busy: false, error: '', result: null};
 const t = (en, hi) => lang === 'hi' ? hi : en;
 const ORDER = ['wet', 'dry', 'sanitary', 'special', 'ewaste'];
 const COLOR = {wet: 'var(--wet)', dry: 'var(--dry)', sanitary: 'var(--sanitary)', special: 'var(--special)', ewaste: 'var(--ewaste)'};
 const SAMPLE = 'Amul Taaza Toned Milk 500 ml   2 x 27.00\nBanana Robusta 1 kg   60.00\nLays Classic Salted 52g   20.00\nWhisper Ultra Clean 8 pads   99.00\nDuracell AA Battery 2pcs   120.00\nItem Total   353.00\nGST 5%';
+const SAMPLE_HI = 'दूध ५०० मिलीलीटर\nकेले १ किलो\nचिप्स १ पैकेट\nसैनिटरी पैड\nबैटरी २ पीस\nकुल ३५३';
 
 function aiNote(ai) {
   if (ai === 'disabled') return t('Photo reading is switched off on this server, so the photo was not read. Paste the receipt text or type items one per line.', 'इस सर्वर पर फ़ोटो पढ़ना बंद है, इसलिए फ़ोटो नहीं पढ़ी गई। रसीद का टेक्स्ट चिपकाएँ या हर लाइन में एक सामान लिखें।');
@@ -37,12 +37,12 @@ function results(r) {
 }
 
 function render() {
-  app.innerHTML = `<div class="top"><div><p class="muted">Lane Scorecard</p><h1>${t('My Bin Guide', 'मेरी डिब्बा गाइड')}</h1></div><button class="lang" data-action="lang">${lang === 'en' ? 'हिन्दी' : 'English'}</button></div>
+  app.innerHTML = `<div class="top"><div><p class="muted">Lane Scorecard</p><h1>${t('My Bin Guide', 'कचरा किस डिब्बे में डालें?')}</h1></div><button class="lang" data-action="lang">${lang === 'en' ? 'हिन्दी' : 'English'}</button></div>
     <p>${t('Paste a receipt or order (Zepto, Blinkit, Zomato, a shop bill) and see which bin each part goes in.', 'कोई रसीद या ऑर्डर (Zepto, Blinkit, Zomato, दुकान का बिल) चिपकाएँ और देखें कि हर हिस्सा किस डिब्बे में जाएगा।')}</p>
     <p class="muted">${t('Private: nothing is saved, and your collector never sees your receipt.', 'निजी: कुछ भी सहेजा नहीं जाता, और कचरा लेने वाला आपकी रसीद कभी नहीं देखता।')}</p>
     <form class="panel" id="guide-form">
       <label for="receipt"><strong>${t('Receipt text', 'रसीद का टेक्स्ट')}</strong> <span class="muted">${t('or type one item per line', 'या हर लाइन में एक सामान लिखें')}</span></label>
-      <textarea id="receipt" name="text" maxlength="6000" placeholder="${esc(SAMPLE)}">${esc(s.text)}</textarea>
+      <textarea id="receipt" name="text" maxlength="6000" placeholder="${esc(t(SAMPLE, SAMPLE_HI))}">${esc(s.text)}</textarea>
       <label class="file">${t('Or add a receipt photo', 'या रसीद की फ़ोटो जोड़ें')} <span class="muted">${s.fileName ? esc(s.fileName) : t('(read by AI when switched on)', '(AI चालू होने पर पढ़ी जाती है)')}</span><input type="file" accept="image/jpeg,image/png,image/webp" id="photo"></label>
       ${s.error ? `<div class="error" role="alert">${esc(s.error)}</div>` : ''}
       <button class="btn" type="submit" ${s.busy ? 'disabled' : ''}>${s.busy ? t('Reading…', 'पढ़ रहे हैं…') : t('Show my bins', 'मेरे डिब्बे दिखाएँ')}</button>
@@ -76,9 +76,9 @@ async function submit(e) {
   try {
     const r = await fetch('/api/guide', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Lane-Request': '1'}, body: JSON.stringify({text: s.text, image: s.image})});
     const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(typeof data.detail === 'string' ? data.detail : t('Could not read that. Try again.', 'पढ़ा नहीं जा सका। फिर कोशिश करें।'));
+    if (!r.ok) throw new Error(lang === 'hi' ? (r.status === 429 ? 'बहुत बार कोशिश की गई। थोड़ी देर बाद फिर कोशिश करें।' : 'रसीद पढ़ी नहीं जा सकी। टेक्स्ट या फ़ोटो जाँचकर फिर कोशिश करें।') : (typeof data.detail === 'string' ? data.detail : 'Could not read that. Try again.'));
     s.result = data;
-  } catch (err) { s.error = err.message; }
+  } catch (err) { s.error = err instanceof TypeError ? t('Could not connect. Check your connection and try again.', 'सर्वर से संपर्क नहीं हुआ। इंटरनेट जाँचकर फिर कोशिश करें।') : err.message; }
   s.busy = false; render();
   if (s.result) document.getElementById('results').scrollIntoView({behavior: 'smooth'});
 }
@@ -97,10 +97,10 @@ app.addEventListener('click', e => {
   if (b.dataset.action === 'lang') {
     s.text = document.getElementById('receipt').value;
     lang = lang === 'en' ? 'hi' : 'en';
-    try { localStorage.setItem('lane-guide-lang', lang); } catch (_) { /* optional */ }
-    document.documentElement.lang = lang;
+    LaneLanguage.set(lang);
+    s.error = '';
     render();
-  } else if (b.dataset.action === 'sample') { s.text = SAMPLE; s.image = ''; s.fileName = ''; render(); }
+  } else if (b.dataset.action === 'sample') { s.text = t(SAMPLE, SAMPLE_HI); s.image = ''; s.fileName = ''; s.error = ''; s.result = null; render(); }
 });
 document.documentElement.lang = lang;
 render();

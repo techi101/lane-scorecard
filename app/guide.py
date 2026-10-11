@@ -11,6 +11,7 @@ as reviewed guidance. When AI is unavailable we say so instead of guessing.
 import json
 import os
 import re
+import unicodedata
 
 STREAMS = ("wet", "dry", "sanitary", "special")
 STREAM_NAMES = {
@@ -104,6 +105,36 @@ RULES = [
      [part("The item and its packing, once used up", "इस्तेमाल के बाद वस्तु और उसकी पैकिंग", "dry", "Keep it clean and dry.", "साफ़ और सूखा रखें।")]),
 ]
 
+# Hindi aliases reuse the same reviewed parts and rule priority as English items.
+# Match whole Devanagari words, including vowel marks, rather than substrings.
+HINDI_KEYWORDS = {
+    "sanitary": ("सैनिटरी पैड", "सैनेटरी पैड", "पैड", "पैड्स", "टैम्पॉन"),
+    "diaper": ("डायपर",), "condom": ("कंडोम",),
+    "battery": ("बैटरी", "बैटरियां", "बैटरियाँ"),
+    "tube light": ("बल्ब", "ट्यूबलाइट", "ट्यूब लाइट"),
+    "thermometer": ("थर्मामीटर",), "syringe": ("सुई", "सिरिंज", "इंसुलिन"),
+    "tablet": ("दवा", "दवाइयाँ", "दवाइयां", "पैरासिटामोल", "दवाई"),
+    "paint": ("पेंट", "कीटनाशक", "मच्छर स्प्रे"),
+    "charger": ("चार्जर", "ईयरफोन", "केबल", "मोबाइल", "कीबोर्ड"),
+    "razor": ("ब्लेड", "रेजर", "रेज़र"),
+    "chocolate": ("चॉकलेट", "डेयरी मिल्क", "बिस्कुट", "चिप्स", "नमकीन", "नूडल्स", "मैगी", "पास्ता", "ओट्स"),
+    "milk": ("दूध",),
+    "curd": ("दही", "लस्सी", "छाछ", "पनीर", "मक्खन", "चीज़", "घी"),
+    "egg": ("अंडा", "अंडे"), "bread": ("ब्रेड", "पाव", "बन", "केक", "रस्क"),
+    "tea": ("चाय", "चायपत्ती", "कॉफी", "कॉफ़ी"),
+    "atta": ("आटा", "चावल", "दाल", "चीनी", "नमक", "बेसन", "सूजी", "पोहा", "मसाला", "हल्दी", "जीरा"),
+    "oil": ("तेल", "सॉस", "केचप", "जैम", "अचार", "शहद"),
+    "water": ("पानी", "कोला", "जूस", "सोडा"), "ice cream": ("आइसक्रीम", "आइस क्रीम", "कुल्फी"),
+    "banana": ("केला", "केले", "सेब", "आम", "संतरा", "संतरे", "पपीता", "अंगूर", "तरबूज", "फल", "प्याज", "प्याज़", "आलू", "टमाटर", "सब्जी", "सब्ज़ी", "सब्जियां", "सब्जियाँ", "गाजर", "पालक", "खीरा", "नींबू", "लहसुन", "अदरक", "मिर्च", "धनिया", "गोभी", "मटर", "नारियल"),
+    "chicken": ("चिकन", "मटन", "मछली", "मांस", "झींगा"),
+    "flower": ("फूल", "माला"),
+    "biryani": ("बिरयानी", "थाली", "पिज्जा", "पिज़्ज़ा", "बर्गर", "रोल", "मोमोज", "पराठा", "डोसा", "भोजन"),
+    "soap": ("साबुन", "शैम्पू", "शैंपू", "डिटर्जेंट", "टूथपेस्ट", "टूथब्रश", "हैंडवॉश", "क्रीम", "लोशन"),
+    "tissue": ("टिशू", "नैपकिन"),
+    "foil": ("फॉइल", "कचरे की थैली", "कागज", "कागज़", "अखबार", "अख़बार", "कॉपी", "पेन", "कार्टन", "शर्ट", "मोजे", "कपड़ा"),
+}
+HINDI_SKIP = re.compile(r"^(?:कुल|उपकुल|योग|जीएसटी|कर|छूट|डिलीवरी शुल्क|भुगतान|बिल नंबर|ऑर्डर नंबर|दिनांक|तारीख)(?=$|[\s:₹०-९0-9])")
+
 SKIP = re.compile(r"(?i)\b(total|sub ?total|gst|cgst|sgst|igst|tax|vat|discount|savings?|delivery|handling|packaging charge|platform fee|tip|"
                   r"invoice|bill no|order id|order #|gstin|fssai|cash|upi|card|paid|change|round ?off|thank|date|time|address|qty|rate|amount|mrp|hsn)\b"
                   r"|\b(ph|phone|mob(ile)?)\s*(no\.?)?\s*[:.]\s*\+?\d")
@@ -111,13 +142,17 @@ NOISE = re.compile(r"(?i)(₹|rs\.?|inr)?\s*\d+([.,]\d+)?\s*(x|kg|g|gm|gms|ml|l|
 
 
 def clean(line):
+    line = unicodedata.normalize("NFC", line)
+    line = re.sub(r"\d+(?:[.,]\d+)?\s*(?:किलोग्राम|किलो|ग्राम|मिलीलीटर|लीटर|पीस)(?![ऀ-ॿ])", " ", line)
     return re.sub(r"\s+", " ", NOISE.sub(" ", line)).strip(" -.,/")
 
 
 def classify(name):
-    low = f" {name.lower()} "
+    low = f" {unicodedata.normalize('NFC', name).lower()} "
     for keywords, parts in RULES:
-        if any(re.search(rf"(?<![a-z]){re.escape(k)}(?![a-z])", low) for k in keywords):
+        aliases = HINDI_KEYWORDS.get(keywords[0], ())
+        if (any(re.search(rf"(?<![a-z]){re.escape(k)}(?![a-z])", low) for k in keywords)
+                or any(re.search(rf"(?<![\wऀ-ॿ]){re.escape(unicodedata.normalize('NFC', k))}(?![\wऀ-ॿ])", low) for k in aliases)):
             return {"name": name, "parts": parts, "source": "rule"}
     return {"name": name, "parts": [], "source": "unknown"}
 
@@ -125,7 +160,7 @@ def classify(name):
 def items_from_text(text):
     names, seen = [], set()
     for line in text.splitlines():
-        if SKIP.search(line):
+        if SKIP.search(line) or HINDI_SKIP.search(line.strip()):
             continue
         name = clean(line)
         if len(re.sub(r"[^a-zA-Zऀ-ॿ]", "", name)) < 3 or name.lower() in seen:

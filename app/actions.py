@@ -60,41 +60,55 @@ def weekly_actions(summary, checks, previous=None):
             # Worker safety comes before every segregation goal.
             kind, title = "safety", "Make the bins safe to handle"
             evidence = f"Workers flagged a dangerous item (glass, blade, needle or unwrapped sanitary waste) in {floor['hazards']} collection(s)."
+            title_hi = "डिब्बों को सुरक्षित बनाएँ"
+            evidence_hi = f"कर्मचारियों ने {floor['hazards']} संग्रह निरीक्षणों में खतरनाक चीज़ (काँच, ब्लेड, सुई या बिना लपेटा सैनिटरी कचरा) बताई।"
             action = {"en": "Ask residents to wrap broken glass and blades in paper and mark them, and to wrap sanitary waste separately. Make sure collection staff have gloves.",
                       "hi": "निवासियों से कहें कि टूटा काँच और ब्लेड कागज़ में लपेटकर उस पर निशान लगाएँ, और सैनिटरी कचरा अलग लपेटें। सफ़ाई कर्मचारियों के पास दस्ताने हों।"}
         elif not floor["checks"]:
             kind, title = "observe", "Make the first check"
             evidence = "No checks were recorded for this location in the selected week."
+            title_hi = "पहला निरीक्षण करें"
+            evidence_hi = "चुने गए सप्ताह में इस जगह का कोई निरीक्षण दर्ज नहीं हुआ।"
             action = {"en": "Visit both bins with permission and record their visible condition.",
                       "hi": "अनुमति लेकर दोनों कूड़ेदान देखें और उनकी दिखाई देने वाली स्थिति दर्ज करें।"}
         elif mixed_collection:
             kind, title = "collection", "Keep collection separate"
             evidence = f"Waste was reported mixed during {mixed_collection} collection observation(s)."
+            title_hi = "संग्रह के समय कचरा अलग रखें"
+            evidence_hi = f"{mixed_collection} संग्रह निरीक्षणों में कचरा मिला हुआ बताया गया।"
             action = {"en": "Discuss a separate collection round or separate containers with the collection team, then observe the next pickup.",
                       "hi": "कचरा लेने वाली टीम से अलग डिब्बों या अलग चक्कर की बात करें। अगली बार देखें कि कचरा अलग रखा गया या नहीं।"}
         elif missing:
             kind, title = "observe", "Fill the observation gaps"
             evidence = f"{missing} of {floor['expected']} bin ratings were marked not seen."
+            title_hi = "अधूरे निरीक्षण पूरे करें"
+            evidence_hi = f"{floor['expected']} डिब्बा रेटिंग में से {missing} को नहीं देखा गया।"
             action = {"en": "Check both bins on the next round. Keep missing observations visible when sharing this week's score.",
                       "hi": "अगले निरीक्षण में दोनों कूड़ेदान देखें। इस हफ़्ते का स्कोर साझा करते समय अधूरे निरीक्षण भी बताएँ।"}
         elif observed and min(observed.values()) < 100:
             weakest = min(observed, key=observed.get)
             kind, title = "segregation", "Improve separation at the bin"
+            title_hi = "डिब्बों में कचरा सही तरह अलग करें"
             issue = top_issue(floor)
             if issue:
                 # A tagged mistake gives specific advice instead of a generic bin tip.
                 evidence = f"{ISSUES[issue]['what']['en']} Seen in {floor['issues'][issue]} of {floor['checks']} check(s)."
+                evidence_hi = f"{ISSUES[issue]['what']['hi']} {floor['checks']} निरीक्षणों में से {floor['issues'][issue]} में देखा गया।"
                 action = ISSUES[issue]["fix"]
             else:
                 evidence = f"The {STREAM_LABELS[weakest]} bin averaged {observed[weakest]:g}/100 across recorded checks."
+                label_hi = {"bio": "हरे", "nonbio": "नीले", "sanitary": "सैनिटरी", "special": "विशेष देखभाल वाले"}[weakest]
+                evidence_hi = f"दर्ज निरीक्षणों में {label_hi} डिब्बे का औसत {observed[weakest]:g}/100 रहा।"
                 action = TIPS[weakest]
         else:
             kind, title = "maintain", "Keep checking consistently"
             evidence = f"Every rated bin was clean in all {floor['checks']} recorded check(s)."
+            title_hi = "नियमित जाँच जारी रखें"
+            evidence_hi = f"सभी {floor['checks']} दर्ज निरीक्षणों में हर देखा गया डिब्बा साफ़ था।"
             action = {"en": "Keep the same checking routine and share the location's feedback. Confirm separation during collection when possible.",
                       "hi": "नियमित निरीक्षण जारी रखें और जगह का फ़ीडबैक साझा करें। संभव हो तो देखें कि उठाते समय कचरा अलग रहता है।"}
         actions.append({"floor_id": floor["id"], "name": floor["name"], "kind": kind,
-                        "title": title, "evidence": evidence, "action": action,
+                        "title": title, "evidence": evidence, "title_hi": title_hi, "evidence_hi": evidence_hi, "action": action,
                         "checks": floor["checks"], "coverage": floor["coverage"], "score": floor["score"],
                         "hazards": floor["hazards"], "worker_reports": floor["worker_reports"], "area": floor.get("area", ""),
                         "outcome": outcome(floor, previous_floors.get(floor["id"]), check_values(own),

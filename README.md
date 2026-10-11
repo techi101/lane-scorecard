@@ -102,6 +102,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 - Duplicate-check prevention: one check per location/date/round (morning, evening or staff collection).
 - Corrections and deletion, permission confirmation and required human confirmation.
 - Random private scorecard links, English/Hindi feedback, print layout, clipboard and WhatsApp sharing.
+- Hindi throughout the operator screens, weekly plans and printable reports. Language switches preserve check drafts, and shared scorecard/guide links retain the selected language. My Bin Guide accepts reviewed Hindi item names as well as English.
 - Operator sign-in, HttpOnly sessions, write-request protection, security headers and private photos.
 - JPEG/PNG/WebP uploads, size/resolution limits and removal of image metadata.
 - Optional Bedrock Nova photo suggestion with explicit disabled/unavailable states. No prediction changes a rating automatically.
@@ -114,7 +115,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 
 Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, the public repository and the recorded submission video. These are not claimed complete.
 
-The worker page's Hindi voice uses the phone browser's built-in speech; it is silent on phones without a Hindi voice, and the page still works by pictures alone. The worker page has not yet been tested with real staff.
+The worker page's Hindi voice uses the phone browser's built-in speech. It waits for voices to load and explains when a Hindi voice is missing or playback fails; picture-based reporting still works. Automated browser checks cover delayed voices, speech errors and reporting without speech. Audible playback on each target phone and usability with real staff still need checking.
 
 Stretch ideas from the earlier research (Telegram sending, Polly audio and Strands-generated/RAG feedback) are **not implemented**. Four-stream ratings are optional, not required. Receipt reading by Bedrock is coded and contract-tested with a stub, but it has not been tested against a real AWS account. This version intentionally uses reviewed, deterministic bilingual guidance for the two-bin campus pilot. It does not claim to be an autonomous agent or a legal waste-compliance certificate.
 
@@ -143,6 +144,7 @@ The previous-week comparison covers the immediately preceding seven days. A tren
 .venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .venv\Scripts\python.exe -m pytest -q
 .venv\Scripts\python.exe tests/browser_check.py
+.venv\Scripts\python.exe tests/browser_hindi.py
 ```
 
 The browser test uses headless Microsoft Edge on Windows. On other platforms install Playwright Chromium first with `python -m playwright install chromium`. It starts its own server on port 8766 and writes only to an isolated `.local/browser-*` folder. Test observations never enter your pilot database. Screenshots in `artifacts/` are test/demo evidence, not actual pilot results.

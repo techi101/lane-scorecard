@@ -89,7 +89,7 @@ def test_weekly_report_is_private_escaped_and_has_no_observation_details(client)
     response = client.get('/api/pilot/report.html?lang=hi')
     assert response.status_code == 200
     assert 'attachment;' in response.headers['content-disposition']
-    assert 'REAL PILOT OBSERVATIONS' in response.text
+    assert 'वास्तविक पायलट निरीक्षण' in response.text
     assert '&lt;img src=x onerror=alert(1)&gt;' in response.text
     assert '<img src=x' not in response.text
     assert 'SECRET OPERATOR NOTE' not in response.text and token not in response.text

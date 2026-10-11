@@ -24,11 +24,16 @@ def main():
         ("Backend and AWS SDK contracts", [python, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--basetemp", temporary]),
         ("JavaScript syntax", ["node", "--check", "web/app.js"]),
         ("Collection follow-up JavaScript syntax", ["node", "--check", "web/followups.js"]),
+        ("Language preference syntax", ["node", "--check", "web/language.js"]),
+        ("Hindi translation syntax", ["node", "--check", "web/i18n.js"]),
+        ("Bin guide JavaScript syntax", ["node", "--check", "web/guide.js"]),
+        ("Worker speech JavaScript syntax", ["node", "--check", "web/worker.js"]),
         ("SAM infrastructure lint", [lint, "template.yaml"]),
     ]
     if args.browser:
         commands.append(("Desktop and mobile browser workflow", [python, "tests/browser_check.py"]))
         commands.append(("Collection action browser workflow", [python, "tests/browser_followups.py"]))
+        commands.append(("Hindi and speech browser workflow", [python, "tests/browser_hindi.py"]))
     env = dict(os.environ)
     for name in ["LANE_TABLE", "LANE_PHOTO_BUCKET", "LANE_ENABLE_AI", "LANE_ADMIN_CODE", "LANE_DATA_DIR", "LANE_ORIGIN", "LANE_SECURE_COOKIE", "AWS_LAMBDA_FUNCTION_NAME"]:
         env.pop(name, None)

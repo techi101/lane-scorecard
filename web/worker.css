@@ -38,3 +38,6 @@ button:focus-visible{outline:4px solid var(--amber);outline-offset:3px}
 .deep[aria-pressed=true]{background:var(--green)}
 .area{font-size:16px;font-weight:700;color:var(--muted);margin:14px 2px 8px;text-transform:uppercase;letter-spacing:.04em}
 .area:first-of-type{margin-top:4px}
+.voice-status{font-size:17px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px;line-height:1.6}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tile{overflow-wrap:anywhere}

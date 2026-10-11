@@ -22,17 +22,63 @@ const ISSUES = [
 ];
 const HELP = 'पहले जगह चुनें। फिर हरे और नीले डिब्बे को देखकर चेहरा दबाएँ। कुछ ग़लत दिखे तो उसकी तस्वीर दबाएँ। काँच, ब्लेड, सुई या खुला पैड मिले तो लाल बटन दबाएँ। आख़िर में हरा बटन, भेजें, दबाएँ।';
 
+// Voices often arrive after page load. Keep only the latest prompt while waiting.
+let pendingSpeech = '', voiceTimer, speechTimer, speechId = 0, activeUtterance;
+let voiceMessage = '';
+function showVoiceMessage(message) {
+  voiceMessage = message;
+  const box = document.getElementById('voice-status');
+  if (box) { box.textContent = message; box.hidden = !message; }
+}
+function playPendingSpeech() {
+  if (!pendingSpeech) return;
+  const voice = speechSynthesis.getVoices().find(v => /^hi(?:[-_]|$)/i.test(v.lang || ''));
+  if (!voice) return;
+  clearTimeout(voiceTimer);
+  const text = pendingSpeech; pendingSpeech = '';
+  const id = ++speechId;
+  clearTimeout(speechTimer);
+  speechSynthesis.cancel();
+  const u = activeUtterance = new SpeechSynthesisUtterance(text);
+  u.lang = 'hi-IN'; u.voice = voice; u.rate = 0.9;
+  u.onstart = () => { if (id === speechId) { clearTimeout(speechTimer); showVoiceMessage(''); } };
+  u.onerror = event => {
+    if (id !== speechId || ['canceled', 'interrupted'].includes(event.error)) return;
+    clearTimeout(speechTimer);
+    showVoiceMessage('आवाज़ नहीं चल पाई। फ़ोन की आवाज़ जाँचें और 🔊 फिर दबाएँ। तस्वीरों से रिपोर्ट भेज सकते हैं।');
+  };
+  u.onend = () => { if (id === speechId) activeUtterance = null; };
+  speechTimer = setTimeout(() => {
+    if (id === speechId) showVoiceMessage('आवाज़ शुरू नहीं हुई। 🔊 फिर दबाएँ या तस्वीरों से रिपोर्ट भेजें।');
+  }, 3000);
+  speechSynthesis.speak(u);
+}
 function speak(text) {
   try {
-    if (!('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'hi-IN';
-    const voice = speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith('hi'));
-    if (voice) u.voice = voice;
-    u.rate = 0.9;
-    speechSynthesis.speak(u);
-  } catch (_) { /* Voice is a help, never a requirement. */ }
+    clearTimeout(voiceTimer);
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+      showVoiceMessage('इस ब्राउज़र में आवाज़ उपलब्ध नहीं है। तस्वीरों से रिपोर्ट भेज सकते हैं।');
+      return;
+    }
+    pendingSpeech = text;
+    playPendingSpeech();
+    if (pendingSpeech) {
+      showVoiceMessage('हिंदी आवाज़ तैयार हो रही है…');
+      voiceTimer = setTimeout(() => {
+        pendingSpeech = '';
+        showVoiceMessage('इस फ़ोन में हिंदी आवाज़ उपलब्ध नहीं है। तस्वीरों से रिपोर्ट भेज सकते हैं। हिंदी आवाज़ चालू करने में पायलट संचालक से मदद लें।');
+      }, 1800);
+    }
+  } catch (_) {
+    pendingSpeech = '';
+    showVoiceMessage('आवाज़ नहीं चल पाई। तस्वीरों से रिपोर्ट भेज सकते हैं।');
+  }
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.addEventListener('voiceschanged', () => {
+    try { playPendingSpeech(); } catch (_) { pendingSpeech = ''; }
+  });
+  speechSynthesis.getVoices();
 }
 
 function binIcon(color) {
@@ -50,7 +96,7 @@ function rateBlock(stream, n) {
 function areaGroups() {
   const groups = [];
   for (const f of s.floors) {
-    const area = f.area || (s.floors.some(x => x.area) ? 'Other' : '');
+    const area = f.area || (s.floors.some(x => x.area) ? 'अन्य जगहें' : '');
     if (!groups.length || groups[groups.length - 1][0] !== area) groups.push([area, []]);
     groups[groups.length - 1][1].push(f);
   }
@@ -64,6 +110,7 @@ function render() {
   }
   const ready = s.floor && s.bio && s.nonbio && !s.sending;
   app.innerHTML = `<div class="top"><h1>कूड़ेदान रिपोर्ट <span class="en">Bin report</span></h1>${s.demo ? '<span class="demo">DEMO</span>' : ''}<button class="speak" data-action="help" aria-label="सुनें / Listen">🔊</button></div>
+    <p id="voice-status" class="voice-status" role="status" ${voiceMessage ? '' : 'hidden'}>${esc(voiceMessage)}</p>
     <div class="step"><b>1</b>जगह चुनें <span class="en">Choose the place</span></div>
     ${areaGroups().map(([area, fs]) => `${area ? `<div class="area">${esc(area)}</div>` : ''}<div class="grid">${fs.map(f => `<button class="tile" data-floor="${esc(f.id)}" aria-pressed="${s.floor === f.id}">${esc(f.name)}</button>`).join('')}</div>`).join('')}
     ${rateBlock('bio', 2)}${rateBlock('nonbio', 3)}
@@ -73,7 +120,7 @@ function render() {
     <div class="step"><b>5</b>खतरनाक चीज़? <span class="en">Anything dangerous?</span></div>
     <button class="hazard" data-action="hazard" aria-pressed="${s.hazard}"><span class="face">⚠️ 🍾 🔪 💉</span>काँच, ब्लेड, सुई या खुला पैड मिला<span class="en">Glass, blade, needle or unwrapped sanitary waste</span></button>
     ${s.error ? `<div class="error" role="alert">${esc(s.error)}</div>` : ''}
-    <button class="send" data-action="send" ${ready ? '' : 'disabled'}>✓ भेजें <span class="en" style="color:inherit">Send</span></button>`;
+    <button class="send" data-action="send" ${ready ? '' : 'disabled'}>${s.sending ? 'भेज रहे हैं…' : '✓ भेजें'} <span class="en" style="color:inherit">${s.sending ? 'Sending…' : 'Send'}</span></button>`;
 }
 
 async function send() {
@@ -99,7 +146,7 @@ async function send() {
 
 app.addEventListener('click', e => {
   const b = e.target.closest('button');
-  if (!b || b.disabled) return;
+  if (!b || b.disabled || s.sending) return;
   if (b.dataset.floor) { s.floor = b.dataset.floor; speak(b.textContent); }
   else if (b.dataset.rate) {
     const r = RATES.find(x => x.value === b.dataset.value);

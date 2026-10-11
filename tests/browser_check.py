@@ -104,7 +104,7 @@ try:
         page.locator('#check-form button[type=submit]').click()
         expect(page.locator('.stats .stat').first).to_contain_text('100')
         card.goto(card_url)
-        expect(card.get_by_role('heading', name='This card is not available.')).to_be_visible()
+        expect(card.get_by_role('heading', name='यह कार्ड उपलब्ध नहीं है।')).to_be_visible()
         page.locator('#workspace').select_option('demo')
         expect(page.locator('.notice')).to_contain_text('Simulated data for practice')
         page.set_viewport_size({'width':390,'height':844})
