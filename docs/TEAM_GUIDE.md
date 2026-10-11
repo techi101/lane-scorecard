@@ -50,7 +50,7 @@ It is entered in the **Waste & Energy** track of the WeMakeDevs × AWS **Environ
 |---|---|
 | **Repository (repo)** | A project folder stored on GitHub, with the full history of every change. |
 | **Commit** | One saved change in the repo's history, with a date and a message. |
-| **Private repo** | Only people invited can see it. Ours is private until we submit. |
+| **Private repo** | Only people invited can see it. Ours was private during the build and is now public for judging. |
 | **Collaborator** | A GitHub user invited to a repo who can push changes. |
 | **Clone** | Download a copy of the repo to your laptop. |
 | **Segregation** | Keeping wet and dry waste in separate bins. |

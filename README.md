@@ -113,7 +113,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 
 ## What remains external
 
-Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, and the recorded submission video and its link above. The code is pushed to [GitHub](https://github.com/techi101/lane-scorecard); the repository is currently private, so public submission access remains to be arranged. These external steps are not claimed complete.
+Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, and the demo video link above (the video is recorded; the YouTube link is added once it is uploaded). The code is public on [GitHub](https://github.com/techi101/lane-scorecard). These external steps are not claimed complete.
 
 The worker page's Hindi voice uses the phone browser's built-in speech. It waits for voices to load and explains when a Hindi voice is missing or playback fails; picture-based reporting still works. Automated browser checks cover delayed voices, speech errors and reporting without speech. Audible playback on each target phone and usability with real staff still need checking.
 
