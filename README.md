@@ -2,7 +2,7 @@
 
 **Campus bins have two colours, but nobody checks whether people actually sort into them.** Lane Scorecard turns short bin checks into a score per location, one practical fix per week, and private English/Hindi feedback. It includes a picture-only Hindi page for the collection staff who sort mixed waste by hand.
 
-**Live on AWS:** https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com (open it: no sign-in needed to look around; see [Try it without signing in](#try-it-without-signing-in)) · **Demo video:** _link added at submission_ · **Track:** Waste and Energy
+**Live on AWS:** https://ss9ib2qbek.execute-api.us-east-1.amazonaws.com (open it: no sign-in needed to look around; see [Try it without signing in](#try-it-without-signing-in)) · **Demo video:** [https://youtu.be/LxuLfnb2GZ0](https://youtu.be/LxuLfnb2GZ0) · **Track:** Waste and Energy
 
 | Weekly plan (one fix per location) | Collection staff page (picture-only Hindi) | Private scorecard (Hindi) |
 |---|---|---|
@@ -123,7 +123,7 @@ Local links are only usable on the computer running the server. WhatsApp sharing
 
 ## What remains external
 
-Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, and the demo video link above (the video is recorded; the YouTube link is added once it is uploaded). The code is public on [GitHub](https://github.com/techi101/lane-scorecard). These external steps are not claimed complete.
+Real Bedrock calls (the account's Bedrock quota is 0 while AWS reviews it), real-bin photo evaluation of the AI, confirmed ratings for the first real checks, more pilot days, and more demo coverage beyond the [video](https://youtu.be/LxuLfnb2GZ0). The code is public on [GitHub](https://github.com/techi101/lane-scorecard). These external steps are not claimed complete.
 
 The worker page's Hindi voice uses the phone browser's built-in speech. It waits for voices to load and explains when a Hindi voice is missing or playback fails; picture-based reporting still works. Automated browser checks cover delayed voices, speech errors and reporting without speech. Audible playback on each target phone and usability with real staff still need checking.
 

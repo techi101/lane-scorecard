@@ -60,4 +60,4 @@ The initial implementation began before the event's published opening. Under the
 
 OpenAI Codex assisted implementation. Earlier planning and research used Claude. Claude Code implemented the collection staff link and picture-only worker page, the week-over-week follow-up check, the simulated evidence script, and the local AWS SAM build and run (`sam validate`, `sam build`, `sam local start-api`). Dependencies and credits are recorded in [ATTRIBUTION.md](ATTRIBUTION.md).
 
-Demo video: _link added at submission_.
+Demo video: https://youtu.be/LxuLfnb2GZ0
